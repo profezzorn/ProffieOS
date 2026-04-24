@@ -275,7 +275,7 @@ const uint16_t Starjedi10pt7bChar22[] = {   // 0x36 '6' edited
   0b01111111000111UL,
   0b00011110000000UL,
 };
-const uint16_t Starjedi10pt7bChar23[] = {   // 0x37 '7'
+const uint16_t Starjedi10pt7bChar23[] = {   // 0x37 '7' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b11000000001111UL,
@@ -286,7 +286,7 @@ const uint16_t Starjedi10pt7bChar23[] = {   // 0x37 '7'
   0b00111111111111UL,
   0b00001111111111UL,
   0b00000011111111UL,
-  0b00000000111111UL
+  0b00000000111111UL,
 };
 const uint16_t Starjedi10pt7bChar24[] = {   // 0x38 '8' edited
   0b00111100011100UL,
