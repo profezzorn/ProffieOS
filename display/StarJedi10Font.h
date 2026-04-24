@@ -20,7 +20,7 @@ const uint8_t Starjedi10pt7bChar2[] = {   // 0x22 '"'
   0b111111UL,
   0b111111UL,
 };
-const uint32_t Starjedi10pt7bChar3[] = {   // 0x23 '#'
+const uint32_t Starjedi10pt7bChar3[] = {   // 0x23 '#' edited
   0b000001111111100000UL,
   0b000111000000111000UL,
   0b001101111111101100UL,
@@ -37,9 +37,9 @@ const uint32_t Starjedi10pt7bChar3[] = {   // 0x23 '#'
   0b011001111111100110UL,
   0b001101111111101100UL,
   0b000111000000111000UL,
-  0b000001111111100000UL
+  0b000001111111100000UL,
 };
-const uint32_t Starjedi10pt7bChar4[] = {   // 0x24 '$'
+const uint32_t Starjedi10pt7bChar4[] = {   // 0x24 '$' edited
   0b000001111111000000UL,
   0b000111111111110000UL,
   0b001111111100011000UL,
@@ -56,9 +56,9 @@ const uint32_t Starjedi10pt7bChar4[] = {   // 0x24 '$'
   0b011111110000000100UL,
   0b001111111100011000UL,
   0b000111111111110000UL,
-  0b000001111111000000UL
+  0b000001111111000000UL,
 };
-const uint32_t Starjedi10pt7bChar5[] = {   // 0x25 '%'
+const uint32_t Starjedi10pt7bChar5[] = {   // 0x25 '%' edited
   0b0000100100100000000UL,
   0b0000010100100000000UL,
   0b0010011111100100000UL,
@@ -74,9 +74,9 @@ const uint32_t Starjedi10pt7bChar5[] = {   // 0x25 '%'
   0b0001110000111000000UL,
   0b0010011111101000000UL,
   0b0000010100100000000UL,
-  0b0000100100100000000UL
+  0b0000100100100000000UL,
 };
-const uint32_t Starjedi10pt7bChar6[] = {   // 0x26 '&'
+const uint32_t Starjedi10pt7bChar6[] = {   // 0x26 '&' edited
   0b0000000000010100100000UL,
   0b0000000100010010100010UL,
   0b0000000010011111110100UL,
@@ -92,7 +92,7 @@ const uint32_t Starjedi10pt7bChar6[] = {   // 0x26 '&'
   0b0000000001011111111100UL,
   0b0000000010010110100010UL,
   0b0000000100010010100000UL,
-  0b0000000000100100010000UL
+  0b0000000000100100010000UL,
 };
 const uint8_t Starjedi10pt7bChar7[] = {   // 0x27 '''
   0b111111UL,
@@ -115,7 +115,7 @@ const uint32_t Starjedi10pt7bChar9[] = {   // 0x29 ')'
   0b001111111111111100UL,
   0b000001111111100000UL,
 };
-const uint32_t Starjedi10pt7bChar10[] = {   // 0x2A '*'
+const uint32_t Starjedi10pt7bChar10[] = {   // 0x2A '*' edited
   0b000001111100000000UL,
   0b000010001110000000UL,
   0b000100000111000000UL,
@@ -129,7 +129,7 @@ const uint32_t Starjedi10pt7bChar10[] = {   // 0x2A '*'
   0b000100000111100000UL,
   0b001000011110000000UL,
   0b000100111100000000UL,
-  0b000011110000000000UL
+  0b000011110000000000UL,
 };
 const uint8_t Starjedi10pt7bChar11[] = {   // 0x2B '+'
   0b1111UL,
@@ -180,7 +180,7 @@ const uint16_t Starjedi10pt7bChar15[] = {   // 0x2F '/'
   0b00000000001111UL,
   0b00000000000011UL,
 };
-const uint16_t Starjedi10pt7bChar16[] = {   // 0x30 '0'
+const uint16_t Starjedi10pt7bChar16[] = {   // 0x30 '0' edited
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -194,9 +194,9 @@ const uint16_t Starjedi10pt7bChar16[] = {   // 0x30 '0'
   0b01111111111110UL,
   0b01111111111110UL,
   0b00111111111100UL,
-  0b00001111110000UL
+  0b00001111110000UL,
 };
-const uint16_t Starjedi10pt7bChar17[] = {   // 0x31 '1'
+const uint16_t Starjedi10pt7bChar17[] = {   // 0x31 '1' edited
   0b00000000111000UL,
   0b00000001111100UL,
   0b00000000111110UL,
@@ -205,9 +205,9 @@ const uint16_t Starjedi10pt7bChar17[] = {   // 0x31 '1'
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Starjedi10pt7bChar18[] = {   // 0x32 '2'
+const uint16_t Starjedi10pt7bChar18[] = {   // 0x32 '2' edited
   0b11110000001110UL,
   0b11111000000111UL,
   0b11111000000111UL,
@@ -218,9 +218,9 @@ const uint16_t Starjedi10pt7bChar18[] = {   // 0x32 '2'
   0b11101111111111UL,
   0b11100111111110UL,
   0b11100011111110UL,
-  0b11100001111100UL
+  0b11100001111100UL,
 };
-const uint16_t Starjedi10pt7bChar19[] = {   // 0x33 '3'
+const uint16_t Starjedi10pt7bChar19[] = {   // 0x33 '3' edited
   0b01110000001110UL,
   0b11100000000111UL,
   0b11100111000111UL,
@@ -231,7 +231,7 @@ const uint16_t Starjedi10pt7bChar19[] = {   // 0x33 '3'
   0b11111111111111UL,
   0b01111101111110UL,
   0b01111101111110UL,
-  0b00111000111100UL
+  0b00111000111100UL,
 };
 const uint16_t Starjedi10pt7bChar20[] = {   // 0x34 '4'
   0b00011110000000UL,
@@ -260,7 +260,7 @@ const uint16_t Starjedi10pt7bChar21[] = {   // 0x35 '5'
   0b01111111000111UL,
   0b00011100000000UL,
 };
-const uint16_t Starjedi10pt7bChar22[] = {   // 0x36 '6'
+const uint16_t Starjedi10pt7bChar22[] = {   // 0x36 '6' edited
   0b00000111100000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -273,7 +273,7 @@ const uint16_t Starjedi10pt7bChar22[] = {   // 0x36 '6'
   0b11110111100111UL,
   0b01111111100111UL,
   0b01111111000111UL,
-  0b00011110000000UL
+  0b00011110000000UL,
 };
 const uint16_t Starjedi10pt7bChar23[] = {   // 0x37 '7'
   0b00000000001111UL,
@@ -288,7 +288,7 @@ const uint16_t Starjedi10pt7bChar23[] = {   // 0x37 '7'
   0b00000011111111UL,
   0b00000000111111UL
 };
-const uint16_t Starjedi10pt7bChar24[] = {   // 0x38 '8'
+const uint16_t Starjedi10pt7bChar24[] = {   // 0x38 '8' edited
   0b00111100011100UL,
   0b01111110111110UL,
   0b11111111111110UL,
@@ -301,9 +301,9 @@ const uint16_t Starjedi10pt7bChar24[] = {   // 0x38 '8'
   0b11111111111111UL,
   0b11111111111110UL,
   0b01111110111110UL,
-  0b00111100011100UL
+  0b00111100011100UL,
 };
-const uint16_t Starjedi10pt7bChar25[] = {   // 0x39 '9'
+const uint16_t Starjedi10pt7bChar25[] = {   // 0x39 '9' edited
   0b00000001111000UL,
   0b11100011111110UL,
   0b11100011111110UL,
@@ -316,7 +316,7 @@ const uint16_t Starjedi10pt7bChar25[] = {   // 0x39 '9'
   0b01111111111110UL,
   0b01111111111110UL,
   0b00111111111100UL,
-  0b00001111110000UL
+  0b00001111110000UL,
 };
 const uint16_t Starjedi10pt7bChar26[] = {   // 0x3A ':'
   0b1111001111UL,
@@ -397,7 +397,7 @@ const uint8_t Starjedi10pt7bChar30[] = {   // 0x3E '>'
   0b1111UL,
   0b1111UL,
 };
-const uint16_t Starjedi10pt7bChar31[] = {   // 0x3F '?'
+const uint16_t Starjedi10pt7bChar31[] = {   // 0x3F '?' edited
   0b00000000001110UL,
   0b00000000000111UL,
   0b11110011000111UL,
@@ -406,10 +406,10 @@ const uint16_t Starjedi10pt7bChar31[] = {   // 0x3F '?'
   0b11110011111111UL,
   0b00000001111111UL,
   0b00000000111111UL,
-  0b00000000011110UL
+  0b00000000011110UL,
 };
-const uint32_t Starjedi10pt7bChar32[] = {   // 0x40 '@'
-  0b000000000000110000000000000000UL,
+const uint32_t Starjedi10pt7bChar32[] = {   // 0x40 '@'  edited
+  0b000000000000110011110000000000UL,
   0b000000000111110011110000000000UL,
   0b000000011111110011110000000000UL,
   0b000001111111110011110000000000UL,
@@ -469,7 +469,7 @@ const uint32_t Starjedi10pt7bChar32[] = {   // 0x40 '@'
   0b111111100011110011110001111110UL,
   0b011111000011110011110000111100UL,
   0b000000000011110011110000000000UL,
-  0b000000000011110000000000000000UL
+  0b000000000011110011110000000000UL,
 };
 const uint16_t Starjedi10pt7bChar33[] = {   // 0x41 'A'
   0b10000000001111UL,
@@ -489,7 +489,7 @@ const uint16_t Starjedi10pt7bChar33[] = {   // 0x41 'A'
   0b11111000000000UL,
   0b11000000000000UL,
 };
-const uint16_t Starjedi10pt7bChar34[] = {   // 0x42 'B'
+const uint16_t Starjedi10pt7bChar34[] = {   // 0x42 'B' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -507,9 +507,9 @@ const uint16_t Starjedi10pt7bChar34[] = {   // 0x42 'B'
   0b11111111111111UL,
   0b11111101111110UL,
   0b01111100111100UL,
-  0b00111000000000UL
+  0b00111000000000UL,
 };
-const uint16_t Starjedi10pt7bChar35[] = {   // 0x43 'C'
+const uint16_t Starjedi10pt7bChar35[] = {   // 0x43 'C' edited
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -522,7 +522,7 @@ const uint16_t Starjedi10pt7bChar35[] = {   // 0x43 'C'
   0b11111000011111UL,
   0b01111000011110UL,
   0b01110000001110UL,
-  0b00100000000100UL
+  0b00100000000100UL,
 };
 const uint16_t Starjedi10pt7bChar36[] = {   // 0x44 'D'
   0b00000000001111UL,
@@ -578,7 +578,7 @@ const uint16_t Starjedi10pt7bChar38[] = {   // 0x46 'F'
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint16_t Starjedi10pt7bChar39[] = {   // 0x47 'G'
+const uint16_t Starjedi10pt7bChar39[] = {   // 0x47 'G' edited
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -591,7 +591,7 @@ const uint16_t Starjedi10pt7bChar39[] = {   // 0x47 'G'
   0b11111110011111UL,
   0b11111110011110UL,
   0b11111110001110UL,
-  0b11111110000100UL
+  0b11111110000100UL,
 };
 const uint16_t Starjedi10pt7bChar40[] = {   // 0x48 'H'
   0b00000000001111UL,
@@ -676,7 +676,7 @@ const uint16_t Starjedi10pt7bChar44[] = {   // 0x4C 'L'
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint16_t Starjedi10pt7bChar45[] = {   // 0x4D 'M'
+const uint16_t Starjedi10pt7bChar45[] = {   // 0x4D 'M' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -696,9 +696,9 @@ const uint16_t Starjedi10pt7bChar45[] = {   // 0x4D 'M'
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Starjedi10pt7bChar46[] = {   // 0x4E 'N'
+const uint16_t Starjedi10pt7bChar46[] = {   // 0x4E 'N' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -715,9 +715,9 @@ const uint16_t Starjedi10pt7bChar46[] = {   // 0x4E 'N'
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
-  0b00000000001111UL
+  0b00000000001111UL,
 };
-const uint16_t Starjedi10pt7bChar47[] = {   // 0x4F 'O'
+const uint16_t Starjedi10pt7bChar47[] = {   // 0x4F 'O' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -733,9 +733,9 @@ const uint16_t Starjedi10pt7bChar47[] = {   // 0x4F 'O'
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Starjedi10pt7bChar48[] = {   // 0x50 'P'
+const uint16_t Starjedi10pt7bChar48[] = {   // 0x50 'P' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -752,9 +752,9 @@ const uint16_t Starjedi10pt7bChar48[] = {   // 0x50 'P'
   0b00000111111111UL,
   0b00000111111111UL,
   0b00000011111110UL,
-  0b00000001111100UL
+  0b00000001111100UL,
 };
-const uint16_t Starjedi10pt7bChar49[] = {   // 0x51 'Q'
+const uint16_t Starjedi10pt7bChar49[] = {   // 0x51 'Q' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -775,9 +775,9 @@ const uint16_t Starjedi10pt7bChar49[] = {   // 0x51 'Q'
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
-  0b00000000001111UL
+  0b00000000001111UL,
 };
-const uint16_t Starjedi10pt7bChar50[] = {   // 0x52 'R'
+const uint16_t Starjedi10pt7bChar50[] = {   // 0x52 'R' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -795,7 +795,7 @@ const uint16_t Starjedi10pt7bChar50[] = {   // 0x52 'R'
   0b11110000000000UL,
   0b11110000000000UL,
   0b11110000000000UL,
-  0b11110000000000UL
+  0b11110000000000UL,
 };
 const uint16_t Starjedi10pt7bChar51[] = {   // 0x53 'S'
   0b11110000000000UL,
@@ -830,7 +830,7 @@ const uint16_t Starjedi10pt7bChar52[] = {   // 0x54 'T'
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar53[] = {   // 0x55 'U'
+const uint32_t Starjedi10pt7bChar53[] = {   // 0x55 'U' edited
   0b0000011111111111111UL,
   0b0000011111111111111UL,
   0b0000011111111111111UL,
@@ -842,9 +842,9 @@ const uint32_t Starjedi10pt7bChar53[] = {   // 0x55 'U'
   0b0001111110000001111UL,
   0b0011111000000000111UL,
   0b0111110000000000011UL,
-  0b1111100000000000001UL
+  0b1111100000000000001UL,
 };
-const uint32_t Starjedi10pt7bChar54[] = {   // 0x56 'V'
+const uint32_t Starjedi10pt7bChar54[] = {   // 0x56 'V' edited
   0b0000011111111111111UL,
   0b0000011111111111111UL,
   0b0000011111111111111UL,
@@ -859,9 +859,9 @@ const uint32_t Starjedi10pt7bChar54[] = {   // 0x56 'V'
   0b1111111000011111111UL,
   0b1111100000001111110UL,
   0b1111000000000111100UL,
-  0b1100000000000000000UL
+  0b1100000000000000000UL,
 };
-const uint16_t Starjedi10pt7bChar55[] = {   // 0x57 'W'
+const uint16_t Starjedi10pt7bChar55[] = {   // 0x57 'W' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -882,9 +882,9 @@ const uint16_t Starjedi10pt7bChar55[] = {   // 0x57 'W'
   0b01111111111111UL,
   0b00001111111111UL,
   0b00000001111111UL,
-  0b00000000000111UL
+  0b00000000000111UL,
 };
-const uint16_t Starjedi10pt7bChar56[] = {   // 0x58 'X'
+const uint16_t Starjedi10pt7bChar56[] = {   // 0x58 'X' edited
   0b00000000001111UL,
   0b11111111101111UL,
   0b11111111101111UL,
@@ -899,7 +899,7 @@ const uint16_t Starjedi10pt7bChar56[] = {   // 0x58 'X'
   0b11110111111111UL,
   0b11110011111110UL,
   0b11110001111100UL,
-  0b11110000000000UL
+  0b11110000000000UL,
 };
 const uint16_t Starjedi10pt7bChar57[] = {   // 0x59 'Y'
   0b00000000001111UL,
@@ -920,7 +920,7 @@ const uint16_t Starjedi10pt7bChar57[] = {   // 0x59 'Y'
   0b00000000000011UL,
   0b00000000000001UL,
 };
-const uint16_t Starjedi10pt7bChar58[] = {   // 0x5A 'Z'
+const uint16_t Starjedi10pt7bChar58[] = {   // 0x5A 'Z' edited
   0b10000000000000UL,
   0b11110000000000UL,
   0b11111110000000UL,
@@ -936,7 +936,7 @@ const uint16_t Starjedi10pt7bChar58[] = {   // 0x5A 'Z'
   0b11111111111111UL,
   0b11111111001111UL,
   0b11111000001111UL,
-  0b11000000001111UL
+  0b11000000001111UL,
 };
 const uint16_t Starjedi10pt7bChar59[] = {   // 0x5B '['
   0b00000000001111UL,
@@ -967,7 +967,7 @@ const uint8_t Starjedi10pt7bChar60[] = {   // 0x5C '\'
   0b1111UL,
   0b1111UL,
 };
-const uint16_t Starjedi10pt7bChar61[] = {   // 0x5D ']'
+const uint16_t Starjedi10pt7bChar61[] = {   // 0x5D ']' edited
   0b00000000000111UL,
   0b00000000111111UL,
   0b00000111111111UL,
@@ -988,9 +988,9 @@ const uint16_t Starjedi10pt7bChar61[] = {   // 0x5D ']'
   0b00000011111111UL,
   0b00000000001111UL,
   0b00000000001111UL,
-  0b00000000001111UL
+  0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar62[] = {   // 0x5E '^'
+const uint32_t Starjedi10pt7bChar62[] = {   // 0x5E '^' edited
   0b0000011000001100000UL,
   0b0000111000001110000UL,
   0b0001111000001111000UL,
@@ -1009,7 +1009,7 @@ const uint32_t Starjedi10pt7bChar62[] = {   // 0x5E '^'
   0b0011111000001111100UL,
   0b0001111000001111000UL,
   0b0000111000001110000UL,
-  0b0000011000001100000UL
+  0b0000011000001100000UL,
 };
 const uint16_t Starjedi10pt7bChar63[] = {   // 0x5F '_'
   0b00000000001111UL,
@@ -1030,7 +1030,7 @@ const uint16_t Starjedi10pt7bChar63[] = {   // 0x5F '_'
   0b00111111111111UL,
   0b00011111111111UL,
 };
-const uint16_t Starjedi10pt7bChar64[] = {   // 0x60 '`'
+const uint16_t Starjedi10pt7bChar64[] = {   // 0x60 '`' edited
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -1048,7 +1048,7 @@ const uint16_t Starjedi10pt7bChar64[] = {   // 0x60 '`'
   0b00011111111111UL,
   0b00000011111111UL,
   0b00000000011111UL,
-  0b00000000000011UL
+  0b00000000000011UL,
 };
 const uint16_t Starjedi10pt7bChar65[] = {   // 0x61 'a'
   0b10000000000000UL,
@@ -1068,7 +1068,7 @@ const uint16_t Starjedi10pt7bChar65[] = {   // 0x61 'a'
   0b11111000000000UL,
   0b11000000000000UL,
 };
-const uint16_t Starjedi10pt7bChar66[] = {   // 0x62 'b'
+const uint16_t Starjedi10pt7bChar66[] = {   // 0x62 'b'  edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1083,9 +1083,9 @@ const uint16_t Starjedi10pt7bChar66[] = {   // 0x62 'b'
   0b11111111111111UL,
   0b11111101111110UL,
   0b01111100111100UL,
-  0b00111000000000UL
+  0b00111000000000UL,
 };
-const uint16_t Starjedi10pt7bChar67[] = {   // 0x63 'c'
+const uint16_t Starjedi10pt7bChar67[] = {   // 0x63 'c' edited
   0b00000111100000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -1099,7 +1099,7 @@ const uint16_t Starjedi10pt7bChar67[] = {   // 0x63 'c'
   0b11110000001111UL,
   0b11110000001111UL,
   0b11110000001111UL,
-  0b11110000001111UL
+  0b11110000001111UL,
 };
 const uint16_t Starjedi10pt7bChar68[] = {   // 0x64 'd'
   0b11111111111111UL,
@@ -1146,7 +1146,7 @@ const uint16_t Starjedi10pt7bChar70[] = {   // 0x66 'f'
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint16_t Starjedi10pt7bChar71[] = {   // 0x67 'g'
+const uint16_t Starjedi10pt7bChar71[] = {   // 0x67 'g' edited
   0b00000111100000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -1160,7 +1160,7 @@ const uint16_t Starjedi10pt7bChar71[] = {   // 0x67 'g'
   0b11111110001111UL,
   0b11111110001111UL,
   0b11111110001111UL,
-  0b11111110001111UL
+  0b11111110001111UL,
 };
 const uint16_t Starjedi10pt7bChar72[] = {   // 0x68 'h'
   0b11111111111111UL,
@@ -1223,7 +1223,7 @@ const uint16_t Starjedi10pt7bChar76[] = {   // 0x6C 'l'
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint16_t Starjedi10pt7bChar77[] = {   // 0x6D 'm'
+const uint16_t Starjedi10pt7bChar77[] = {   // 0x6D 'm' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1240,9 +1240,9 @@ const uint16_t Starjedi10pt7bChar77[] = {   // 0x6D 'm'
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Starjedi10pt7bChar78[] = {   // 0x6E 'n'
+const uint16_t Starjedi10pt7bChar78[] = {   // 0x6E 'n' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1255,9 +1255,9 @@ const uint16_t Starjedi10pt7bChar78[] = {   // 0x6E 'n'
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Starjedi10pt7bChar79[] = {   // 0x6F 'o'
+const uint16_t Starjedi10pt7bChar79[] = {   // 0x6F 'o' edited
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -1273,9 +1273,9 @@ const uint16_t Starjedi10pt7bChar79[] = {   // 0x6F 'o'
   0b01111111111110UL,
   0b01111111111110UL,
   0b00111111111100UL,
-  0b00001111110000UL
+  0b00001111110000UL,
 };
-const uint16_t Starjedi10pt7bChar80[] = {   // 0x70 'p'
+const uint16_t Starjedi10pt7bChar80[] = {   // 0x70 'p' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1289,9 +1289,9 @@ const uint16_t Starjedi10pt7bChar80[] = {   // 0x70 'p'
   0b00000111111111UL,
   0b00000111111111UL,
   0b00000011111110UL,
-  0b00000001111100UL
+  0b00000001111100UL,
 };
-const uint16_t Starjedi10pt7bChar81[] = {   // 0x71 'q'
+const uint16_t Starjedi10pt7bChar81[] = {   // 0x71 'q' edited
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -1307,9 +1307,9 @@ const uint16_t Starjedi10pt7bChar81[] = {   // 0x71 'q'
   0b11111111111110UL,
   0b11111111111110UL,
   0b11111111111100UL,
-  0b11110011110000UL
+  0b11110011110000UL,
 };
-const uint16_t Starjedi10pt7bChar82[] = {   // 0x72 'r'
+const uint16_t Starjedi10pt7bChar82[] = {   // 0x72 'r' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1324,7 +1324,7 @@ const uint16_t Starjedi10pt7bChar82[] = {   // 0x72 'r'
   0b11110111111111UL,
   0b11110011111110UL,
   0b11110001111100UL,
-  0b11110000000000UL
+  0b11110000000000UL,
 };
 const uint16_t Starjedi10pt7bChar83[] = {   // 0x73 's'
   0b11110000000000UL,
@@ -1370,7 +1370,7 @@ const uint16_t Starjedi10pt7bChar85[] = {   // 0x75 'u'
   0b00111111111111UL,
   0b00011111111111UL,
 };
-const uint16_t Starjedi10pt7bChar86[] = {   // 0x76 'v'
+const uint16_t Starjedi10pt7bChar86[] = {   // 0x76 'v' edited
   0b00000000000111UL,
   0b00000000111111UL,
   0b00000111111111UL,
@@ -1387,9 +1387,9 @@ const uint16_t Starjedi10pt7bChar86[] = {   // 0x76 'v'
   0b00111111111111UL,
   0b00000111111111UL,
   0b00000000111111UL,
-  0b00000000000111UL
+  0b00000000000111UL,
 };
-const uint16_t Starjedi10pt7bChar87[] = {   // 0x77 'w'
+const uint16_t Starjedi10pt7bChar87[] = {   // 0x77 'w' edited
   0b00000000000111UL,
   0b00000000111111UL,
   0b00000111111111UL,
@@ -1409,9 +1409,9 @@ const uint16_t Starjedi10pt7bChar87[] = {   // 0x77 'w'
   0b00111111111111UL,
   0b00000011111111UL,
   0b00000000001111UL,
-  0b00000000000001UL
+  0b00000000000001UL,
 };
-const uint16_t Starjedi10pt7bChar88[] = {   // 0x78 'x'
+const uint16_t Starjedi10pt7bChar88[] = {   // 0x78 'x' edited
   0b11000000000011UL,
   0b11100000000111UL,
   0b11110000001111UL,
@@ -1427,7 +1427,7 @@ const uint16_t Starjedi10pt7bChar88[] = {   // 0x78 'x'
   0b11111000011111UL,
   0b11110000001111UL,
   0b11100000000111UL,
-  0b11000000000011UL
+  0b11000000000011UL,
 };
 const uint16_t Starjedi10pt7bChar89[] = {   // 0x79 'y'
   0b00000000000001UL,
@@ -1463,7 +1463,7 @@ const uint16_t Starjedi10pt7bChar90[] = {   // 0x7A 'z'
   0b11110000011111UL,
   0b11110000001111UL,
 };
-const uint32_t Starjedi10pt7bChar91[] = {   // 0x7B '{'
+const uint32_t Starjedi10pt7bChar91[] = {   // 0x7B '{' edited
   0b1111111111111111100UL,
   0b1100100100100010100UL,
   0b1001100100101010100UL,
@@ -1477,7 +1477,7 @@ const uint32_t Starjedi10pt7bChar91[] = {   // 0x7B '{'
   0b1101111111111010011UL,
   0b1011000000000100110UL,
   0b1001000000000101110UL,
-  0b1101100000000010101UL
+  0b1101100000000010101UL,
 };
 const uint8_t Starjedi10pt7bChar92[] = {   // 0x7C '|'
   0b1111UL,
@@ -1487,7 +1487,7 @@ const uint8_t Starjedi10pt7bChar92[] = {   // 0x7C '|'
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar93[] = {   // 0x7D '}'
+const uint32_t Starjedi10pt7bChar93[] = {   // 0x7D '}' edited
   0b0000001111111000000UL,
   0b0000110011011110000UL,
   0b0001000011011011000UL,
@@ -1506,7 +1506,7 @@ const uint32_t Starjedi10pt7bChar93[] = {   // 0x7D '}'
   0b0010011000011011100UL,
   0b0001110101011001000UL,
   0b0000110001000110000UL,
-  0b0000001111111000000UL
+  0b0000001111111000000UL,
 };
 const uint16_t Starjedi10pt7bChar94[] = {   // 0x7E '~'
   0b00000000000001UL,
