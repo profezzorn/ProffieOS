@@ -59,13 +59,19 @@ public:
     B = C;
   }
 
+  bool GetStartPosition(float* start) {
+    RefPtr<BufferedWavPlayer> humplayer = GetWavPlayerPlaying(hybrid_font.getHum());
+    if (!humplayer) return false;
+    *start = (font_config.ProffieOSSmoothSwingHumstart == 0) ? millis() / 1000.0 : humplayer->pos();
+    return true;
+  }
+
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
     if (!on_) return;
     uint32_t m = millis();
-    RefPtr<BufferedWavPlayer> humplayer = GetWavPlayerPlaying(hybrid_font.getHum());
-    if (!humplayer) return;
-    float start = (font_config.ProffieOSSmoothSwingHumstart == 0) ? m / 1000.0 : humplayer->pos();
+    float start;
+    if (!GetStartPosition(&start)) return;
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
@@ -98,6 +104,16 @@ public:
     delegate_->SB_Off(off_type, location);
   }
 
+  // At alt change, switch swings when player is silent,
+  // and start at the hum position.
+  void CheckAlt() {
+    if (A.alt == current_alternative && B.alt == current_alternative) return;
+    float start;
+    if (!GetStartPosition(&start)) return;
+    A.SwitchAlt(L, start);
+    B.SwitchAlt(H, start);
+  }
+
   enum class SwingState {
     OFF, // waiting for swing to start
     ON,  // swinging
@@ -118,12 +134,12 @@ public:
     if (delta > 1000000) delta = 1;
     last_micros_ = t;
     float hum_volume = 1.0;
-
+    if (on_) CheckAlt();
     switch (state_) {
       case SwingState::OFF:
-	if (!A.player || !B.player) {
-	  PickRandomSwing();
-	}
+  if (!A.player || !B.player) {
+    PickRandomSwing();
+  }
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
 #if 1
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
@@ -134,7 +150,7 @@ public:
           break;
         }
         state_ = SwingState::ON;
-	[[gnu::fallthrough]];
+  [[gnu::fallthrough]];
 
       case SwingState::ON:
         // trigger accent swing
@@ -151,7 +167,7 @@ public:
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + A.separation;
-	    Swap();
+      Swap();
           }
           float mixab = 0.0;
           if (A.begin() < 0.0)
@@ -194,7 +210,7 @@ public:
         A.set_volume(0);
         B.set_volume(0);
         state_ = SwingState::OUT;
-	[[gnu::fallthrough]];
+  [[gnu::fallthrough]];
 
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
@@ -215,13 +231,20 @@ private:
       if (player) player->set_volume(v);
     }
     void Play(Effect* effect, float start = 0.0) {
+      alt = current_alternative;
       if (!player) {
-	player = GetFreeWavPlayer();
-	if (!player) return;
+  player = GetFreeWavPlayer();
+  if (!player) return;
       }
       player->set_volume(0.0f);
       player->PlayOnce(effect, start);
       player->PlayLoop(effect);
+    }
+    // Switch swings to the current alt only while player is silent.
+    void SwitchAlt(Effect* effect, float start) {
+      if (alt == current_alternative || !isOff()) return;
+      Stop();
+      Play(effect, start);
     }
     bool isPlaying() {
       if (!player) return false;
@@ -257,6 +280,7 @@ private:
     float midpoint = 0.0;
     float width = 0.0;
     float separation = 0.0;
+    int alt = 0;
   };
   Data A;
   Data B;
