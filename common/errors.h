@@ -53,16 +53,16 @@ void ProffieOSErrors::font_directory_not_found() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
-  AppendToDelayTimer(2000);
+  delay_timer().Append(2000);  // this is BC only because I think this is how it should work
 #else
-  beeper.Beep(0.5,   261.63 * 2); // C5 - Font
-  beeper.Beep(0.5/3, 246.94 * 2); // B4 - di
-  beeper.Beep(0.5/3, 220.00 * 2); // A4 - rec
-  beeper.Beep(0.5/3, 196.00 * 2); // G4 - tor
-  beeper.Beep(0.5,   174.61 * 2); // F4 - y
-  beeper.Beep(0.5,   146.83 * 2); // D4 - not
-  beeper.Beep(0.5,   130.81 * 2); // C4 - found
-  AppendToDelayTimer(2530);
+  beeper.Beep(0.5,   261.63 * 2);  // C5 - Font
+  beeper.Beep(0.5/3, 246.94 * 2);  // B4 - di
+  beeper.Beep(0.5/3, 220.00 * 2);  // A4 - rec
+  beeper.Beep(0.5/3, 196.00 * 2);  // G4 - tor
+  beeper.Beep(0.5,   174.61 * 2);  // F4 - y
+  beeper.Beep(0.5,   146.83 * 2);  // D4 - not
+  beeper.Beep(0.5,   130.81 * 2);  // C4 - found
+  delay_timer().Append(2530);
 #endif
 #endif
 }
@@ -76,13 +76,13 @@ void ProffieOSErrors::voice_pack_not_found() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_voice_pack_15, 25);
   talkie.Say(talkie_not_found_15, 15);
-  AppendToDelayTimer(2000);
+  delay_timer().Append(2000);
 #else
-  beeper.Beep(1.0, 220.00 * 2); // A4 - Voice
-  beeper.Beep(0.5, 130.81 * 2); // C4 - pack
-  beeper.Beep(0.5, 146.83 * 2); // D4 - not
-  beeper.Beep(1.0, 130.81 * 2); // C4 - found
-  AppendToDelayTimer(3000);
+  beeper.Beep(1.0, 220.00 * 2);  // A4 - Voice
+  beeper.Beep(0.5, 130.81 * 2);  // C4 - pack
+  beeper.Beep(0.5, 146.83 * 2);  // D4 - not
+  beeper.Beep(1.0, 130.81 * 2);  // C4 - found
+  delay_timer().Append(3000);
 #endif
 #endif
 }
@@ -96,17 +96,17 @@ void ProffieOSErrors::error_in_blade_array() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
-  AppendToDelayTimer(2000);
+  delay_timer().Append(2000);
 #else
-  beeper.Beep(0.25, 174.61 * 2); // F4 - Err
-  beeper.Beep(0.25, 196.00 * 2); // G4 - or
-  beeper.Beep(0.25, 174.61 * 2); // F4 - in
-  beeper.Beep(0.25, 164.81 * 2); // E4 - the
-  beeper.Beep(0.3,  146.83 * 2); // D4 - blade
-  beeper.Beep(0.2,  0);          // Silence
-  beeper.Beep(0.5,  146.83 * 2); // D4 - ar
-  beeper.Beep(1.0,  130.81 * 2); // C4 - ray
-  AppendToDelayTimer(3000);
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - Err
+  beeper.Beep(0.25, 196.00 * 2);  // G4 - or
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - in
+  beeper.Beep(0.25, 164.81 * 2);  // E4 - the
+  beeper.Beep(0.3,  146.83 * 2);  // D4 - blade
+  beeper.Beep(0.2,  0);           // Silence
+  beeper.Beep(0.5,  146.83 * 2);  // D4 - ar
+  beeper.Beep(1.0,  130.81 * 2);  // C4 - ray
+  delay_timer().Append(3000);
 #endif
 #endif
 }
@@ -120,18 +120,18 @@ void ProffieOSErrors::error_in_font_directory() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
-  AppendToDelayTimer(1300);
+  delay_timer().Append(1300);
 #else
-  beeper.Beep(0.25, 174.61 * 2); // F4 - Err
-  beeper.Beep(0.25, 196.00 * 2); // G4 - or
-  beeper.Beep(0.25, 174.61 * 2); // F4 - in
-  beeper.Beep(0.25, 164.81 * 2); // E4 - the
-  beeper.Beep(0.5,  146.83 * 2); // D4 - font
-  beeper.Beep(0.5,  164.81 * 2); // E4 - di
-  beeper.Beep(0.5,  196.00 * 2); // G4 - rec
-  beeper.Beep(0.5,  246.94 * 2); // B4 - tor
-  beeper.Beep(0.5,  261.63 * 2); // C5 - y
-  AppendToDelayTimer(3500);
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - Err
+  beeper.Beep(0.25, 196.00 * 2);  // G4 - or
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - in
+  beeper.Beep(0.25, 164.81 * 2);  // E4 - the
+  beeper.Beep(0.5,  146.83 * 2);  // D4 - font
+  beeper.Beep(0.5,  164.81 * 2);  // E4 - di
+  beeper.Beep(0.5,  196.00 * 2);  // G4 - rec
+  beeper.Beep(0.5,  246.94 * 2);  // B4 - tor
+  beeper.Beep(0.5,  261.63 * 2);  // C5 - y
+  delay_timer().Append(3500);
 #endif
 #endif
 }
@@ -146,17 +146,17 @@ void ProffieOSErrors::error_in_voice_pack_version() {
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_voice_pack_15, 15);
   talkie.Say(talkie_version_15, 15);
-  AppendToDelayTimer(1500);
+  delay_timer().Append(1800);
 #else
-  beeper.Beep(0.25, 174.61 * 2); // F4 - Err
-  beeper.Beep(0.25, 196.00 * 2); // G4 - or
-  beeper.Beep(0.25, 174.61 * 2); // F4 - in
-  beeper.Beep(0.25, 164.81 * 2); // E4 - the
-  beeper.Beep(0.5,  220.00 * 2); // A4 - voice
-  beeper.Beep(0.5,  146.83 * 2); // D4 - pack
-  beeper.Beep(1.0,  196.00 * 2); // G4 - ver
-  beeper.Beep(0.5,  130.81 * 2); // C4 - sion
-  AppendToDelayTimer(3500);
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - Err
+  beeper.Beep(0.25, 196.00 * 2);  // G4 - or
+  beeper.Beep(0.25, 174.61 * 2);  // F4 - in
+  beeper.Beep(0.25, 164.81 * 2);  // E4 - the
+  beeper.Beep(0.5,  220.00 * 2);  // A4 - voice
+  beeper.Beep(0.5,  146.83 * 2);  // D4 - pack
+  beeper.Beep(1.0,  196.00 * 2);  // G4 - ver
+  beeper.Beep(0.5,  130.81 * 2);  // C4 - sion
+  delay_timer().Append(3500);
 #endif
 #endif
 }
@@ -172,7 +172,7 @@ void ProffieOSErrors::low_battery() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_low_battery_15, 15);
 #else
-  beeper.Beep(1.0, 261.63 * 2); // C4
+  beeper.Beep(1.0, 261.63 * 2);  // C4
   beeper.Beep(1.0, 130.81 * 2); // C3
 #endif
 #endif
