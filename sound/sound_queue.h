@@ -33,7 +33,6 @@ private:
   const char* filename_;
 };
 
-
 // Like SoundToPlayInCurrentDir but also searches the "errors" directory
 // as a fallback.  Used by PlayErrorMessage()
 class SoundToPlayErrorFile : public SoundToPlayBase {
@@ -50,8 +49,6 @@ public:
 private:
   const char* filename_;
 };
-
-
 
 class SoundToPlayFileID : public SoundToPlayBase {
 public:
@@ -223,6 +220,18 @@ struct SoundToPlay {
    }
 };
 
+class SoundToPlayAfterDelay : public SoundToPlayBase {
+public:
+  SoundToPlayAfterDelay(Effect* effect) : sound_(effect) {}
+  bool Play(BufferedWavPlayer* player) override {
+    if (delay_timer().Active()) return false;
+    return sound_.Play(player);
+  }
+
+private:
+  SoundToPlay sound_;
+};
+
 template<int QueueLength>
 class SoundQueue {
 public:
@@ -259,14 +268,16 @@ public:
     }
     if (!busy_) {
       if (queue_.size()) {
-        busy_ = true;
+        if (!player && delay_timer().Active()) return;
         if (!player) {
           player = GetFreeWavPlayer();
           if (!player) return;
         }
         player->set_volume_now(1.0f);
-        queue_[0]->Play(player.get());
-	queue_.pop_front();
+        if (queue_[0]->Play(player.get())) {
+          busy_ = true;
+          queue_.pop_front();
+        }
       } else {
         if (player) player.Free();
       }
