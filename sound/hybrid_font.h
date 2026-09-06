@@ -614,20 +614,10 @@ public:
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
       case EFFECT_BOOT:
-        if (DelayTimerActive()) {
-          pending_boot_ = true;
-          PVLOG_DEBUG << "*** BOOT deferred — waiting for error sound to finish\n";
-          return;
-        }
-        if (PlayPolyphonic(&SFX_boot)) return;
+        if (PlayQueuedSound(&SFX_boot)) return;
         // If no boot sounds are found, fall through to font. - This is not how it currently works.
         [[gnu::fallthrough]];
       case EFFECT_NEWFONT:
-        if (DelayTimerActive()) {
-          pending_newfont_ = true;
-          PVLOG_DEBUG << "*** NEWFONT deferred — waiting for error sound to finish\n";
-          return;
-        }
         SB_NewFont();
         return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
@@ -699,7 +689,7 @@ public:
   }
 
   void SB_NewFont() {
-    if (!PlayPolyphonic(&SFX_font)) {
+    if (!PlayQueuedSound(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
   }
@@ -883,8 +873,6 @@ public:
   }
 
   bool check_postoff_ = false;
-  bool pending_boot_ = false;
-  bool pending_newfont_ = false;
   void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
       if (!GetWavPlayerPlaying(&SFX_preon)) {
@@ -898,20 +886,6 @@ public:
           !GetWavPlayerPlaying(&SFX_pwroff)) {
         check_postoff_ = false;
         SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
-      }
-    }
-      // Delay boot.wav for error talkie/beeps to finish..
-    if (!DelayTimerActive()) {
-      if (pending_boot_) {
-        pending_boot_ = false;
-        if (!PlayPolyphonic(&SFX_boot)) {
-          // No boot sound — fall through to font - not how it works currently
-          pending_newfont_ = true;
-        }
-      }
-      if (pending_newfont_) {
-        pending_newfont_ = false;
-        SB_NewFont();
       }
     }
   }
