@@ -53,7 +53,7 @@ void ProffieOSErrors::font_directory_not_found() {
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
-  delay_timer().Append(2000);  // this is BC only because I think this is how it should work
+  delay_timer().Append(2000);
 #else
   beeper.Beep(0.5,   261.63 * 2);  // C5 - Font
   beeper.Beep(0.5/3, 246.94 * 2);  // B4 - di
