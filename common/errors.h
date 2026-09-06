@@ -173,7 +173,7 @@ void ProffieOSErrors::low_battery() {
   talkie.Say(talkie_low_battery_15, 15);
 #else
   beeper.Beep(1.0, 261.63 * 2);  // C4
-  beeper.Beep(1.0, 130.81 * 2); // C3
+  beeper.Beep(1.0, 130.81 * 2);  // C3
 #endif
 #endif
 }
