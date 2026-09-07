@@ -172,7 +172,6 @@ public:
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           SaberBase::DoEndLockup();
         if (show_detonation_) {
-          SaberBase::skip_effect_blast_ = true;
           Off(OFF_BLAST);
         } else {
           // Detonate and shut off with no EFFECT_BOOM, and no EFFECT_RETRACTION
