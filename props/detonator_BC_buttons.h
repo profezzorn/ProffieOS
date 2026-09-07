@@ -1,4 +1,4 @@
-// detonator_BC_buttons.h Rev 1
+// detonator_BC_buttons.h Rev 2
 
 /* Created by Brian Conner for KR Sabers' Thermal Detonator run 2026, based on detonator_Oli_buttons.h by OlivierFlying747-8
   https://fredrik.hubbe.net/lightsaber/proffieos.html
@@ -46,11 +46,11 @@ Optional sounds:
 ----------------
 font.wav
 quote.wav
-cntdown.wav
+destruct.wav (Countdown Timer sound)
 
 Optional defines for your CONFIG_TOP section:
 ---------------------------------------------
-#define DETONATOR_TIMER_DURATION 6.0         // default is 6 seconds.
+#define DESTRUCT_TIMER_DURATION 6.0         // default is 6 seconds.
 #define SPOKEN_BATTERY_LEVEL                 // Use to have battery level spoken (uses Voicepack sound files) If not defined, High/Mid/Low LED meter only.
 
 ==========================================================================================================================================================
@@ -61,7 +61,7 @@ Button Controls:
 Latching POWER Button:
   - Turn ON                     - Latch ON (starts disarmed)
   - Turn OFF                    - Latch OFF "He Agrees!"
-                                    If a countdown timer was started, it will continue until Detonation.
+                                  If a countdown timer was started, it will continue until Detonation.
 
 AUX Button:
   - Toggle Explosion Animation  - 4x Click and Hold at anytime (uses "enabled"/"disabled" voice sound)
@@ -80,8 +80,8 @@ AUX Button:
   - Arm                         - 1x Click while Disarmed - or - Shake(plays bgnarm.wav followed by armhum.wav)
   - Disarm                      - 2x Click or Twist while Armed (plays endarm.wav)
   - Detonate:                   - Hold while Armed to start Countdown Timer.
-                                    This plays countdown.wav. The delay to Detonation is the sound file's duration.
-                                    If no countdown.wav exists, delay to Detonation is the user defined DETONATOR_TIMER_DURATION.
+                                    This plays destruct.wav. The delay to Detonation is the sound file's duration.
+                                    If no destruct.wav exists, delay to Detonation is the user defined DESTRUCT_TIMER_DURATION.
                                     If not defined, the default Coundown Timer duration is 6 seconds.
 
 Clash (while Armed)             - Instantly Detonate (interrupts any countdown), resets everything, turns the detonator OFF.
@@ -99,13 +99,13 @@ Reset after Detonation          - To reset, toggle the POW button by closing and
 #include "prop_base.h"
 #include "../sound/sound_library.h"
 
-#ifndef DETONATOR_TIMER_DURATION
-#define DETONATOR_TIMER_DURATION 6.0f
+#ifndef DESTRUCT_TIMER_DURATION
+#define DESTRUCT_TIMER_DURATION 6.0f
 #endif
 
 #define PROP_TYPE DetonatorBCButtons
 
-EFFECT(cntdown);  // for optional Countdown Timer sound. If not in font, armhum plays straight through to Detonation.
+EFFECT(destruct);  // for optional Countdown Timer sound. If not in font, armhum plays straight through to Detonation.
 EFFECT(mute);     // Notification before muted ignition to avoid confusion.
 
 class DelayTimer {
@@ -172,6 +172,7 @@ public:
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           SaberBase::DoEndLockup();
         if (show_detonation_) {
+          SaberBase::skip_effect_blast_ = true;
           Off(OFF_BLAST);
         } else {
           // Detonate and shut off with no EFFECT_BOOM, and no EFFECT_RETRACTION
@@ -212,22 +213,22 @@ public:
     PVLOG_NORMAL << "**** DISARMED\n";
   }
 
-  void Detonate(float boom_delay = DETONATOR_TIMER_DURATION) {
+  void Detonate(float boom_delay = DESTRUCT_TIMER_DURATION) {
     if (boom_delay > 0.0f) {
-      if (SFX_cntdown) {
+      if (SFX_destruct) {
 /* make this to be really sexy, and use pos() and compensate for longer or shorter user defined durations.
-wav would be delayed from starting if DETONATOR_TIMER_DURATION is > 6seconds, and truncated from the front end of the wav if DETONATOR_TIMER_DURATION< 6 seconds. */
+wav would be delayed from starting if DESTRUCT_TIMER_DURATION is > 6seconds, and truncated from the front end of the wav if DESTRUCT_TIMER_DURATION< 6 seconds. */
         // End LOCKUP_ARMED but skip playing endarm
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         SaberBase::DoEndLockup();
-        hybrid_font.PlayMonophonic(&SFX_cntdown, &SFX_hum);
+        hybrid_font.PlayMonophonic(&SFX_destruct, &SFX_hum);
         boom_delay = hybrid_font.GetCurrentEffectLength();
       }
     }
-    // USER1 used in blade style for countdown timer blade effect.
+    // EFFECT_DESTRUCT used in blade style for countdown timer blade effect.
     // Use Variation as the function to sync timing (TrDelayX<Variation>)
     SaberBase::SetVariation(boom_delay * 1000);
-    SaberBase::DoEffect(EFFECT_USER1, 0);
+    SaberBase::DoEffect(EFFECT_DESTRUCT, 0);
     SetNextAction(NEXT_ACTION_BLOW, boom_delay);
   }
 
