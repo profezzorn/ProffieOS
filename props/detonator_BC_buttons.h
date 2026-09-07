@@ -171,14 +171,14 @@ public:
           // Clear lockup first so OFF_BLAST doesn't play endarm.
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           SaberBase::DoEndLockup();
-        if (show_detonation_) {
-          Off(OFF_BLAST);
-        } else {
-          // Detonate and shut off with no EFFECT_BOOM, and no EFFECT_RETRACTION
-          hybrid_font.PlayMonophonic(&SFX_boom, NULL);
-          Off(OFF_IDLE);
-          PVLOG_NORMAL << "+++++ BOOM!! +++++\n";
-        }
+          if (show_detonation_) {
+            Off(OFF_BLAST);
+          } else {
+            // Detonate and shut off with no EFFECT_BOOM, and no EFFECT_RETRACTION
+            hybrid_font.PlayMonophonic(&SFX_boom, NULL);
+            Off(OFF_IDLE);
+            PVLOG_NORMAL << "+++++ BOOM!! +++++\n";
+          }
           // Reset to idle smoothswings pair.
           ResetCurrentAlternative();
           armed_ = false;
