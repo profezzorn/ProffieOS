@@ -172,12 +172,19 @@ public:
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           SaberBase::DoEndLockup();
           if (show_detonation_) {
-            Off(OFF_BLAST);
-          } else {
+            // Can't just uses OFF_BLAST. Need to avoid EFFECT_BLAST from SaberBase::DoOff(),
+            // otherwise boom doesn't get a chance to play as it tries 
+            // to play a non-existant blaster.wav on the same player.
+            Off(OFF_IDLE);
+            SaberBase::DoEffect(EFFECT_BOOM, 0);
+            PVLOG_NORMAL << "+++++ BOOM!! +++++\n";
+          } else if (SFX_boom) {
             // Detonate and shut off with no EFFECT_BOOM, and no EFFECT_RETRACTION
             hybrid_font.PlayMonophonic(&SFX_boom, NULL);
             Off(OFF_IDLE);
             PVLOG_NORMAL << "+++++ BOOM!! +++++\n";
+          } else {
+            Off(OFF_BLAST);
           }
           // Reset to idle smoothswings pair.
           ResetCurrentAlternative();
