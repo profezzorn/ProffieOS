@@ -157,7 +157,7 @@ public:
     do {
       tmp->allow_disable_ = false;
       if (tmp->current_style_)
-      tmp->current_style_->run(tmp);
+	tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
@@ -411,9 +411,9 @@ public:
     int channel = led % 3;
     if (cnt_ == 0) {
       if (chip == 3) {
-        cnt_ = 1;
+	cnt_ = 1;
       } else {
-        cnt_ = 3;
+	cnt_ = 3;
       }
     }
     int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);
