@@ -615,7 +615,7 @@ public:
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
       case EFFECT_BOOT:
         if (PlayQueuedSound(&SFX_boot)) return;
-        // If no boot sounds are found, fall through to font. - This is not how it currently works.
+        // If no boot sounds are found, fall through to font.
         [[gnu::fallthrough]];
       case EFFECT_NEWFONT:
         SB_NewFont();
@@ -689,6 +689,7 @@ public:
   }
 
   void SB_NewFont() {
+    if (delay_timer().Active()) return;
     if (!PlayQueuedSound(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }

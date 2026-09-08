@@ -35,22 +35,6 @@ private:
 
 // Like SoundToPlayInCurrentDir but also searches the "errors" directory
 // as a fallback.  Used by PlayErrorMessage()
-// class SoundToPlayErrorFile : public SoundToPlayBase {
-// public:
-//   SoundToPlayErrorFile(const char* filename) : filename_(filename) {}
-//   bool Play(BufferedWavPlayer* player) override {
-//     if (player->PlayInCurrentDir(filename_)) return true;
-//     PVLOG_DEBUG << "Trying errors/ folder for " << filename_ << "\n";
-//     if (player->PlayInDir("errors", filename_)) {
-//       PVLOG_DEBUG << "Error wav found. Playing " << filename_ << "\n";
-//     }
-//     return true;
-//     PVLOG_DEBUG << "*** Error wav " << filename_ << " not found\n";
-//     return false;
-//   }
-// private:
-//   const char* filename_;
-// };
 class SoundToPlayErrorFile : public SoundToPlayBase {
 public:
   // |dir| is either a string literal, or a pointer into current_directory.

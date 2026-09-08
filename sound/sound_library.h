@@ -128,34 +128,6 @@ inline bool PlayQueuedSound(Effect* effect) {
   return SOUNDQ->Play(SoundToPlayAfterDelay(effect));
 }
 
-// inline bool PlayErrorMessage(const char* filename) {
-//   // Check font dirs, then errors folder before queuing so Talkie is suppressed only if WAV exists.
-//   bool found = false;
-//   bool in_font = false;
-//   for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
-//     PathHelper full_name(dir, filename);
-//     if (LSFS::Exists(full_name)) { found = true; in_font = true; break; }
-//   }
-//   if (!found) {
-//     PathHelper err_path("errors", filename);
-//     found = LSFS::Exists(err_path);
-//   }
-//   if (!found) {
-//     PVLOG_DEBUG << "*** Error wav not found: " << filename
-//                  << " — falling through to talkie/beeper\n";
-//     return false;
-//   }
-//   PVLOG_DEBUG << "*** Error wav found in "
-//                << (in_font ? "font" : "errors/") << " folder: " << filename << "\n";
-//   if (!SOUNDQ->Play(SoundToPlayErrorFile(filename))) return false;
-//   // Tell errors.h that we've got this one covered, so that it doesn't say
-//   // the same thing again with Talkie.  (SaberBase::sound_length can't be used
-//   // for this, as the WAV hasn't been opened yet and its length is unknown.)
-//   error_wav_queued() = true;
-//   // Short initial hold until Loop() updates delay from actual remaining playback.
-//   delay_timer().Append(500);
-//   return true;
-// }
 inline bool PlayErrorMessage(const char* filename) {
   // Find the wav once, here, so that Talkie is suppressed only if a wav
   // exists, and so that the queue doesn't have to search for it again.
