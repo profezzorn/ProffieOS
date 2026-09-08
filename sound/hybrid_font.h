@@ -1,6 +1,7 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
 #include "../common/fuse.h"
+#include "../common/delay_timer.h"
 
 class FontConfigFile : public ConfigFile {
 public:
@@ -612,8 +613,13 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
-      case EFFECT_NEWFONT: SB_NewFont(); return;
+      case EFFECT_BOOT:
+        if (PlayQueuedSound(&SFX_boot)) return;
+        // If no boot sounds are found, fall through to font. - This is not how it currently works.
+        [[gnu::fallthrough]];
+      case EFFECT_NEWFONT:
+        SB_NewFont();
+        return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
@@ -683,7 +689,7 @@ public:
   }
 
   void SB_NewFont() {
-    if (!PlayPolyphonic(&SFX_font)) {
+    if (!PlayQueuedSound(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
   }

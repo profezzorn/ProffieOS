@@ -4,6 +4,7 @@
 #ifdef ENABLE_AUDIO
 
 #include "sound_queue.h"
+#include "../common/delay_timer.h"
 
 // Sound library
 EFFECT(mnum); // menu numbers
@@ -58,6 +59,16 @@ public:
   const char* name() { return "SoundQueue"; }
   void Loop() override {
     PollSoundQueue(wav_player_);
+    // Keep the delay timer just past the current WAV end so boot/font waits for queue drain.
+    if (busy() && wav_player_) {
+      float pos = wav_player_->pos();
+      float len = wav_player_->length();
+      // pos() is negative while output buffer drains after decode; then remaining is -pos.
+      float remaining = (pos < 0.0f) ? -pos : (len - pos);
+      if (remaining < 0.0f) remaining = 0.0f;
+      uint32_t needed_until = millis() + (uint32_t)(remaining * 1000) + 500;
+      delay_timer().ExtendTo(needed_until);
+    }
   }
 
   void require_version(int version) {
@@ -68,17 +79,26 @@ public:
     if (effect == EFFECT_CHDIR) CheckVersion();
   }
 
-
-  // Legacy call for prop compatibility.
-  void Poll(RefPtr<BufferedWavPlayer>& player) {
-    static bool unlinked = false;
-    if (!unlinked) {
-      unlinked = true;
-      Looper::Unlink();
-      wav_player_.Free();
-    }
-    PollSoundQueue(player);
+// Legacy call for prop compatibility.
+void Poll(RefPtr<BufferedWavPlayer>& player) {
+  static bool unlinked = false;
+  if (!unlinked) {
+    unlinked = true;
+    Looper::Unlink();
+    player = wav_player_;
+    wav_player_.Free();
   }
+  PollSoundQueue(player);
+
+  if (busy() && player) {
+    float pos = player->pos();
+    float len = player->length();
+    float remaining = (pos < 0.0f) ? -pos : (len - pos);
+    if (remaining < 0.0f) remaining = 0.0f;
+    uint32_t needed_until = millis() + (uint32_t)(remaining * 1000) + 500;
+    delay_timer().ExtendTo(needed_until);
+  }
+}
 
 private:
   void CheckVersion() {
@@ -103,6 +123,38 @@ private:
 };
 
 #define SOUNDQ (getPtr<SoundQueueSingleton>())
+
+inline bool PlayQueuedSound(Effect* effect) {
+  if (!effect || !*effect) return false;
+  return SOUNDQ->Play(SoundToPlayAfterDelay(effect));
+}
+
+inline bool PlayErrorMessage(const char* filename) {
+  // Check font dirs, then errors folder before queuing so Talkie is suppressed only if WAV exists.
+  bool found = false;
+  bool in_font = false;
+  for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+    PathHelper full_name(dir, filename);
+    if (LSFS::Exists(full_name)) { found = true; in_font = true; break; }
+  }
+  if (!found) {
+    PathHelper err_path("errors", filename);
+    found = LSFS::Exists(err_path);
+  }
+  if (!found) {
+    PVLOG_DEBUG << "*** Error wav not found: " << filename
+                 << " — falling through to talkie/beeper\n";
+    return false;
+  }
+  PVLOG_DEBUG << "*** Error wav found in "
+               << (in_font ? "font" : "errors/") << " folder: " << filename << "\n";
+  if (!SOUNDQ->Play(SoundToPlayErrorFile(filename))) return false;
+  // Sound_length is still 0. Set a non-zero value now so errors.h suppresses Talkie immediately.
+  if (SaberBase::sound_length < 0.001f) SaberBase::sound_length = 0.001f;
+  // Short initial hold until Loop() updates delay from actual remaining playback.
+  delay_timer().Append(500);
+  return true;
+}
 
 class SoundLibrary  {
 public:
