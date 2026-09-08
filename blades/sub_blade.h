@@ -136,7 +136,7 @@ public:
     if (allow_disable) blade_->allow_disable();
   }
   bool IsHandled(HandledFeature effect) override {
-    if (current_style_)
+    if (!current_style_)
       return false;
     return current_style_->IsHandled(effect);
   }
