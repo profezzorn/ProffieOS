@@ -33,6 +33,39 @@ private:
   const char* filename_;
 };
 
+// Like SoundToPlayInCurrentDir but also searches the "errors" directory
+// as a fallback.  Used by PlayErrorMessage()
+// class SoundToPlayErrorFile : public SoundToPlayBase {
+// public:
+//   SoundToPlayErrorFile(const char* filename) : filename_(filename) {}
+//   bool Play(BufferedWavPlayer* player) override {
+//     if (player->PlayInCurrentDir(filename_)) return true;
+//     PVLOG_DEBUG << "Trying errors/ folder for " << filename_ << "\n";
+//     if (player->PlayInDir("errors", filename_)) {
+//       PVLOG_DEBUG << "Error wav found. Playing " << filename_ << "\n";
+//     }
+//     return true;
+//     PVLOG_DEBUG << "*** Error wav " << filename_ << " not found\n";
+//     return false;
+//   }
+// private:
+//   const char* filename_;
+// };
+class SoundToPlayErrorFile : public SoundToPlayBase {
+public:
+  // |dir| is either a string literal, or a pointer into current_directory.
+  SoundToPlayErrorFile(const char* dir, const char* filename)
+    : dir_(dir), filename_(filename) {}
+  bool Play(BufferedWavPlayer* player) override {
+    // PlayErrorMessage() already found the file, so play it directly
+    // instead of searching all the font dirs again.
+    return player->PlayInDir(dir_, filename_);
+  }
+private:
+  const char* dir_;
+  const char* filename_;
+};
+
 class SoundToPlayFileID : public SoundToPlayBase {
 public:
   SoundToPlayFileID(Effect::FileID id) : file_id_(id) {}
@@ -203,6 +236,18 @@ struct SoundToPlay {
    }
 };
 
+class SoundToPlayAfterDelay : public SoundToPlayBase {
+public:
+  SoundToPlayAfterDelay(Effect* effect) : sound_(effect) {}
+  bool Play(BufferedWavPlayer* player) override {
+    if (delay_timer().Active()) return false;
+    return sound_.Play(player);
+  }
+
+private:
+  SoundToPlay sound_;
+};
+
 template<int QueueLength>
 class SoundQueue {
 public:
@@ -239,17 +284,30 @@ public:
     }
     if (!busy_) {
       if (queue_.size()) {
-        busy_ = true;
+        if (delay_timer().Active()) return;
         if (!player) {
           player = GetFreeWavPlayer();
           if (!player) return;
         }
         player->set_volume_now(1.0f);
-        queue_[0]->Play(player.get());
-	queue_.pop_front();
+        if (queue_[0]->Play(player.get())) {
+          busy_ = true;
+          queue_.pop_front();
+        }
       } else {
         if (player) player.Free();
       }
+    }
+    // Duck everything else while the queue is speaking, so that error
+    // messages, menu prompts, etc. stay intelligible even if the prop has
+    // other sounds going.  The hold is short and re-armed on every poll,
+    // which means we don't need to know how long the sound is (asking the
+    // player for length() before it has been opened doesn't work), and
+    // sounds that start in the middle of the speech get ducked as well.
+    if (busy_ && player) {
+      DodgeSound(DODGE_HOLD_MILLIS);
+      // ...but not the sound we are trying to make audible.
+      player->set_dodge(false);
     }
   }
   bool busy() const { return busy_; }
@@ -262,6 +320,10 @@ public:
     queue_.clear();
   }
 private:
+  // How long other sounds stay ducked after the last poll that found the
+  // queue busy.  Re-armed on every poll, so this only decides how quickly
+  // things come back up once the queue goes quiet.
+  static const uint32_t DODGE_HOLD_MILLIS = 250;
   bool busy_ = false;
   bool fadeout_;
   bool fadeout_len_;
