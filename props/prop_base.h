@@ -266,6 +266,12 @@ public:
     // interleave things without worry about memory corruption.
     for (size_t i = 0; i < NELEM(wav_players); i++) {
       wav_players[i].Stop();
+    // The pending error announcements are all about the font we're leaving,
+    // so drop them.  ScanCurrentDirectory() below will queue up whatever is
+    // wrong with the new font.
+    SOUNDQ->clear_pending();
+    deferred_effects().clear();
+    delay_timer().Stop();
     }
 #endif
 
