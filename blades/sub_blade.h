@@ -32,6 +32,18 @@ allowing you to "skip" over a regular number of pixels in the data chain. (Such 
 Usage: SubBladeWithList<int1, int2, ...>(blade_definition)
 Like SubBlade, but you provide a custom list of LED indices instead of a range.
 Useful for ring-based or irregular LED layouts.
+The style only sees the LEDs in the list, and every LED of the underlying blade
+which isn't listed in some sub-blade is turned off for you at the start of each
+frame. That means you do NOT have to list all the LEDs you don't want in an extra
+"dummy" sub-blade (with a black style and a bumped-up NUM_BLADES) just to keep
+them dark. Making such a dummy sub-blade still works if you want to control those
+LEDs, it's just no longer required.
+For example, to only address LED 20, 35 and 50 of a 95 LED string:
+{ 0,
+  SubBladeWithList<19, 34, 49>(WS281XBladePtr<95, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >() ),
+  CONFIGARRAY(presets) }
+NUM_BLADES is 1 in this example, and the style sees a blade with three LEDs.
+Note that LED addresses start at zero, so LED 20 is index 19.
 
 For more in-depth explanations, see the SubBlade Wiki pages here:
 https://github.com/profezzorn/ProffieOS/wiki/SubBlade
@@ -75,6 +87,14 @@ public:
 
   bool primary() const {
     return primary_;
+  }
+
+  // Sub-blades made with SubBladeWithList<> only write to the LEDs in their
+  // list, so any LED which isn't part of some sub-blade has to be turned off
+  // explicitly. This is set on the primary sub-blade, which is the one that
+  // runs all the styles in the chain.
+  void SetBlankUnusedLeds() {
+    blank_unused_leds_ = true;
   }
 
   void clear() override {
@@ -126,10 +146,15 @@ public:
   virtual void run(BladeBase* blade) override {
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
+    // Start the frame by turning the whole blade off if some sub-blade only
+    // addresses a few of the LEDs. That way the LEDs which aren't part of any
+    // sub-blade end up dark instead of showing whatever happened to be in the
+    // frame buffer already.
+    if (blank_unused_leds_) blade_->clear();
     do {
       tmp->allow_disable_ = false;
       if (tmp->current_style_)
-	tmp->current_style_->run(tmp);
+  tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
@@ -162,6 +187,7 @@ protected:
   SubBladeWrapper* next_;
   int blade_number_;
   bool primary_ = false;
+  bool blank_unused_leds_ = false;
 };
 
 SubBladeWrapper* first_subblade_wrapper = NULL;
@@ -343,6 +369,11 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
     blade = first_subblade_wrapper->blade_;
   }
 
+  // Negative indices are allowed, they just mean that the LED goes nowhere.
+  for (int i = 0; i < count; i++) {
+    if (indices[i] >= blade->num_leds()) return NULL;
+  }
+
   SubBladeWrapperWithList* ret = new SubBladeWrapperWithList(indices, count);
 
   if (first_subblade_wrapper) {
@@ -355,6 +386,9 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
   }
 
   ret->SetupSubBlade(blade, 0, count);
+  // first_subblade_wrapper is the primary sub-blade of this chain, and the
+  // one which gets to blank out the LEDs that this list doesn't cover.
+  first_subblade_wrapper->SetBlankUnusedLeds();
   return ret;
 }
 
@@ -374,9 +408,9 @@ public:
     int channel = led % 3;
     if (cnt_ == 0) {
       if (chip == 3) {
-	cnt_ = 1;
+  cnt_ = 1;
       } else {
-	cnt_ = 3;
+  cnt_ = 3;
       }
     }
     int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);
