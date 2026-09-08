@@ -34,16 +34,19 @@ Like SubBlade, but you provide a custom list of LED indices instead of a range.
 Useful for ring-based or irregular LED layouts.
 The style only sees the LEDs in the list, and every LED of the underlying blade
 which isn't listed in some sub-blade is turned off for you at the start of each
-frame. That means you do NOT have to list all the LEDs you don't want in an extra
-"dummy" sub-blade (with a black style and a bumped-up NUM_BLADES) just to keep
-them dark. Making such a dummy sub-blade still works if you want to control those
-LEDs, it's just no longer required.
+frame.
 For example, to only address LED 20, 35 and 50 of a 95 LED string:
 { 0,
   SubBladeWithList<19, 34, 49>(WS281XBladePtr<95, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >() ),
   CONFIGARRAY(presets) }
 NUM_BLADES is 1 in this example, and the style sees a blade with three LEDs.
 Note that LED addresses start at zero, so LED 20 is index 19.
+
+That means you do NOT HAVE to list all the LEDs you don't want in an extra
+"dummy" sub-blade (with a black style for it in every preset and a bumped-up NUM_BLADES value)
+Making such a dummy sub-blade still works if you want to control those
+LEDs, it's just no longer required, because writing this out can be annoying:
+  SubBladeWithList<0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,  20,21,22,23,24,25,26,27,28,29,30,31,32,33,  35,36,37,38,39,40,41,42,43,44,45,46,47,48,  50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,  80,81,82,83,84,85,86,87,88,89,90,91,92,93  >(NULL),
 
 For more in-depth explanations, see the SubBlade Wiki pages here:
 https://github.com/profezzorn/ProffieOS/wiki/SubBlade
@@ -154,14 +157,14 @@ public:
     do {
       tmp->allow_disable_ = false;
       if (tmp->current_style_)
-  tmp->current_style_->run(tmp);
+      tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
     if (allow_disable) blade_->allow_disable();
   }
   bool IsHandled(HandledFeature effect) override {
-    if (current_style_)
+    if (!current_style_)
       return false;
     return current_style_->IsHandled(effect);
   }
@@ -408,9 +411,9 @@ public:
     int channel = led % 3;
     if (cnt_ == 0) {
       if (chip == 3) {
-  cnt_ = 1;
+        cnt_ = 1;
       } else {
-  cnt_ = 3;
+        cnt_ = 3;
       }
     }
     int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);
