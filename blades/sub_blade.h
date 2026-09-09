@@ -143,10 +143,10 @@ public:
   virtual void run(BladeBase* blade) override {
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
-    // Start the frame by turning the whole blade off if some sub-blade only
-    // addresses a few of the LEDs. That way the LEDs which aren't part of any
-    // sub-blade end up dark instead of showing whatever happened to be in the
-    // frame buffer already.
+    // If a bub-blade only addresses a few of the LEDs,
+	// Start the frame by turning the whole blade off.
+	// Without clearing the blade, pixels which aren't part of any subblade may get random values.
+	Without clearing the blade, pixels which aren't part of any subblade may get random values.*/
     if (blank_unused_leds_) blade_->clear();
     do {
       tmp->allow_disable_ = false;
