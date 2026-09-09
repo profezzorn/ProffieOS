@@ -146,7 +146,6 @@ public:
     // If a SubBlade only addresses a few of the LEDs,
 	// Start the frame by turning the whole blade off.
 	// Without clearing the blade, pixels which aren't part of any SubBlade may get random values.
-	Without clearing the blade, pixels which aren't part of any subblade may get random values.*/
     if (blank_unused_leds_) blade_->clear();
     do {
       tmp->allow_disable_ = false;
