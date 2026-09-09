@@ -366,8 +366,9 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
     blade = first_subblade_wrapper->blade_;
   }
 
-  // Negative indices are allowed, they just mean that the LED goes nowhere.
-  for (int i = 0; i < count; i++) {
+  // Unmapped LEDs are allowed; a negative mapping means that this
+  // sub-blade LED has no corresponding LED on the underlying blade.
+	for (int i = 0; i < count; i++) {
     if (indices[i] >= blade->num_leds()) return NULL;
   }
 
