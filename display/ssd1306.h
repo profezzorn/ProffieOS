@@ -512,6 +512,8 @@ public:
   void SB_On2(EffectLocation location) override {
     if (img_.IMG_out) {
       ShowFileWithSoundLength(&img_.IMG_out, font_config.ProffieOSOutImageDuration);
+    } else {
+      ShowDefault();
     }
   }
 
