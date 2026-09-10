@@ -783,6 +783,7 @@ public:
         layout_ = LAYOUT_LANDSCAPE;
         looped_frames_ = height / HEIGHT;
       } else {
+        layout_ = LAYOUT_PORTRAIT;
         looped_frames_ = height / WIDTH;
       }
       if (current_effect_ == &img_.IMG_on) {
