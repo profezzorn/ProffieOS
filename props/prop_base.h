@@ -1804,6 +1804,13 @@ public:
       return true;
     }
 
+    if (!strcmp(cmd, "set_preset_fast") && arg) {
+      int preset = strtol(arg, NULL, 0);
+      SaveState(preset);
+      SetPreset(preset, false);
+      return true;
+    }
+
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
