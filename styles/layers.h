@@ -4,21 +4,33 @@
 #include "alpha.h"
 #include "../functions/int.h"
 #include "colors.h"
+#include "../common/color.h"
+#include <utility>
 
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
 // return value: COLOR or LAYER (same as BASE)
-// This style works like layers in gimp or photoshop.
-// In most cases, the layers are expected to be normally transparent effects
-// that turn opaque when then want to paint an effect over the base color.
-// If the base color is opqaque, the final result of this style will also be
-// opaque. If the base color is transparent, the final result may also be transparent,
-// depending on what the layers paint on top of the base color.
+// This style works like layers in Gimp or Photoshop: each layer adds to the stack covering the BASE.
+// The written order of layers in the blade style code puts the BASE first,
+// with any following layers visually covering it. (later layers draw over earlier ones)
+// The rule for opacity is as follows:
+//   The output of Layers<> is opaque if the BASE of that Layers<> is opaque.
+//   If BASE is transparent: the overall result is transparent.
+//   No additional solid opaque colors may be stacked on top of an opaque BASE.
+//
+// StylePtr<> expects its argument to be opaque.
+// Therefore, when using StylePtr<Layers<BASE, ... >>(), BASE MUST be an opaque color.
+//
+// Layers<> itself can still be nested anywhere a STYLE/COLOR is allowed; only the top-level StylePtr<...>()
+// requirement forces the requirement of the BASE to be opaque in that specific position.
 
 template<class BASE, class L1>
 class Compose {
 public:
+  static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
+                "\n\n"
+                "*** Layers<> error: Only the base color may be solid.\n\n");
   LayerRunResult run(BladeBase* blade) {
     LayerRunResult base_run_result = RunLayer(&base_, blade);
     LayerRunResult layer_run_result = RunLayer(&layer_, blade);
@@ -73,13 +85,20 @@ public:
   }
 };
 
-
 template<class BASE, class ... LAYERS> struct LayerSelector {};
 template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
+
+// Drop fully transparent first item (Alpha 0) when there are exactly 2 args.
 template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
+
+// Drop fully transparent when it’s the second (right) item in a pair.
+template<class BASE, class ABASE>
+struct LayerSelector<BASE, AlphaL<ABASE, Int<0>>> { typedef BASE type; };
+
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
-template<class BASE, class L1, class ... REST> struct LayerSelector<BASE, L1, REST...> {
-  typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
+template<class BASE, class L1, class ... REST>
+struct LayerSelector<BASE, L1, REST...> {
+  typedef typename LayerSelector<typename LayerSelector<BASE, L1>::type, REST...>::type type;
 };
 
 template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
