@@ -32,9 +32,6 @@ allowing you to "skip" over a regular number of pixels in the data chain. (Such 
 Usage: SubBladeWithList<int1, int2, ...>(blade_definition)
 Like SubBlade, but you provide a custom list of LED indices instead of a range.
 Useful for ring-based or irregular LED layouts.
-The style only sees the LEDs in the list, and every LED of the underlying blade
-which isn't listed in some sub-blade is turned off for you at the start of each
-frame.
 For example, to only address LED 20, 35 and 50 of a 95 LED string:
 { 0,
   SubBladeWithList<19, 34, 49>(WS281XBladePtr<95, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >() ),
