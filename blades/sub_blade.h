@@ -372,9 +372,6 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
   }
 
   ret->SetupSubBlade(blade, 0, count);
-  // first_subblade_wrapper is the primary sub-blade of this chain, and the
-  // one which gets to blank out the LEDs that this list doesn't cover.
-  first_subblade_wrapper->SetBlankUnusedLeds();
   return ret;
 }
 
