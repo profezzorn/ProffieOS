@@ -84,14 +84,6 @@ public:
     return primary_;
   }
 
-  // Sub-blades made with SubBladeWithList<> only write to the LEDs in their
-  // list, so any LED which isn't part of some sub-blade has to be turned off
-  // explicitly. This is set on the primary sub-blade, which is the one that
-  // runs all the styles in the chain.
-  void SetBlankUnusedLeds() {
-    blank_unused_leds_ = true;
-  }
-
   void clear() override {
     if (primary()) BladeWrapper::clear();
   }
@@ -181,7 +173,6 @@ protected:
   SubBladeWrapper* next_;
   int blade_number_;
   bool primary_ = false;
-  bool blank_unused_leds_ = false;
 };
 
 SubBladeWrapper* first_subblade_wrapper = NULL;
