@@ -475,7 +475,10 @@ public:
         } else {
           if (frame_available_ && advance) frame_count_++;
           if (t_ < effect_display_duration_) {
-            ConvertToNative();
+            if (!(looped_frames_ == 1 && already_converted_)) {
+              ConvertToNative();
+              already_converted_ = (looped_frames_ == 1);
+            }
             frame_available_ = false;
             if (font_config.ProffieOSAnimationFrameRate > 0.0) {
               return 1000 / font_config.ProffieOSAnimationFrameRate;
@@ -675,6 +678,7 @@ public:
     file_.Play(effect);
     frame_available_ = false;
     frame_count_ = 0;
+    already_converted_ = false;
     screen_ = SCREEN_IMAGE;
     eof_ = false;
     current_effect_ = effect;
@@ -697,6 +701,7 @@ public:
     file_.Play(file);
     frame_available_ = false;
     frame_count_ = 0;
+    already_converted_ = false;
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
   }
@@ -838,6 +843,10 @@ public:
       return true;
     }
     if (!frame_available_) {
+      if (looped_frames_ == 1 && ypos_ > 0) {
+        frame_available_ = true;
+        return true;
+      }
       // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
       if (!advance_) {
         file_.Seek(last_state_.file_pos);
@@ -909,6 +918,7 @@ private:
   int32_t frame_count_ = 0;
   volatile int32_t looped_frames_ = 0;
   int32_t ypos_ = 0;
+  bool already_converted_ = false;
   bool lock_fb_ = false;
   ReadState last_state_;
   volatile bool advance_ = true;
