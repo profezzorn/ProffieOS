@@ -32,6 +32,13 @@ allowing you to "skip" over a regular number of pixels in the data chain. (Such 
 Usage: SubBladeWithList<int1, int2, ...>(blade_definition)
 Like SubBlade, but you provide a custom list of LED indices instead of a range.
 Useful for ring-based or irregular LED layouts.
+Pixels wrapped into a subblade, but not referenced by any subblade will be black.
+For example, to only address LED 20, 35 and 50 of a 95 LED string:
+{ 0,
+  SubBladeWithList<19, 34, 49>(WS281XBladePtr<95, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >() ),
+  CONFIGARRAY(presets) }
+NUM_BLADES is 1 in this example, and the style sees a blade with three LEDs.
+Note that LED addresses start at zero, so LED 20 is index 19.
 
 For more in-depth explanations, see the SubBlade Wiki pages here:
 https://github.com/profezzorn/ProffieOS/wiki/SubBlade
@@ -126,6 +133,10 @@ public:
   virtual void run(BladeBase* blade) override {
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
+    // If a SubBlade only addresses a few of the LEDs,
+	// Start the frame by turning the whole blade off.
+	// Without clearing the blade, pixels which aren't part of any SubBlade may get random values.
+    blade_->clear();
     do {
       tmp->allow_disable_ = false;
       if (tmp->current_style_)
@@ -341,6 +352,12 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
   } else {
     if (!first_subblade_wrapper) return NULL;
     blade = first_subblade_wrapper->blade_;
+  }
+
+  // Unmapped LEDs are allowed; a negative mapping means that this
+  // sub-blade LED has no corresponding LED on the underlying blade.
+	for (int i = 0; i < count; i++) {
+    if (indices[i] >= blade->num_leds()) return NULL;
   }
 
   SubBladeWrapperWithList* ret = new SubBladeWrapperWithList(indices, count);
