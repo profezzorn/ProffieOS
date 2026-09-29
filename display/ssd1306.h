@@ -474,7 +474,7 @@ public:
           }
         } else {
           if (frame_available_ && advance) frame_count_++;
-          if (looped_frames_ == 1 || t_ < effect_display_duration_) {
+          if (t_ < effect_display_duration_) {
             ConvertToNative();
             frame_available_ = false;
             if (font_config.ProffieOSAnimationFrameRate > 0.0) {
@@ -722,7 +722,7 @@ public:
     uint32_t file_end = 0;
     // STDERR << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
     if (ypos_ >= looped_frames_ || ypos_ == 0) {
-      if (looped_frames_ > 1) f->Seek(0);
+      f->Seek(0);
       ypos_ = 0;
       uint32_t file_start = f->Tell();
       int a = f->Read();
