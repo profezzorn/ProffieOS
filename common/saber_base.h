@@ -4,6 +4,7 @@
 #include "linked_list.h"
 #include "vec3.h"
 #include "onceperblade.h"
+#include "delay_timer.h"
 
 // SaberBase is our main class for distributing saber-related events, such
 // as on/off/clash/etc. to where they need to go. Each SABERFUN below
@@ -255,6 +256,37 @@ private:
   BladeSet blades_;
 };
 
+// Events that have been held back while error messages are being announced.
+// We defer the whole event rather than just the sound so that sound, display
+// and blade styles stay in sync, and so that SaberBase::sound_length is valid
+// by the time anything looks at it.
+class DeferredEffects {
+public:
+  static const size_t MAX_DEFERRED_EFFECTS = 4;
+
+  bool push(EffectType effect, EffectLocation location) {
+    if (num_ >= MAX_DEFERRED_EFFECTS) return false;
+    effects_[num_] = effect;
+    locations_[num_] = location;
+    num_++;
+    return true;
+  }
+  size_t size() const { return num_; }
+  EffectType effect(size_t n) const { return effects_[n]; }
+  EffectLocation location(size_t n) const { return locations_[n]; }
+  void clear() { num_ = 0; }
+
+private:
+  EffectType effects_[MAX_DEFERRED_EFFECTS];
+  EffectLocation locations_[MAX_DEFERRED_EFFECTS];
+  size_t num_ = 0;
+};
+
+inline DeferredEffects& deferred_effects() {
+  static DeferredEffects effects;
+  return effects;
+}
+
 struct BladeEffect {
   EffectType type;
 
@@ -445,8 +477,32 @@ private:
 
 public:
   static void DoEffect(EffectType effect, EffectLocation location) {
+    if (DeferEffect(effect, location)) return;
     ClearSoundInfo();
     DoEffectInternal2(effect, location);
+  }
+
+  // Boot and font announcements are held back while error messages are
+  // playing, so that the user gets to hear what is wrong first, and so that
+  // display and audio still arrive together when it finally does play.
+  // Returns true if the event was deferred.
+  static bool DeferEffect(EffectType effect, EffectLocation location) {
+    if (effect != EFFECT_BOOT && effect != EFFECT_NEWFONT) return false;
+    if (!delay_timer().Active()) return false;
+    return deferred_effects().push(effect, location);
+  }
+
+  // Called from a Looper, see sound.h
+  static void PollDeferredEffects() {
+    DeferredEffects& deferred = deferred_effects();
+    if (!deferred.size() || delay_timer().Active()) return;
+    // Copy before dispatching, as the handlers may defer new events.
+    DeferredEffects pending = deferred;
+    deferred.clear();
+    for (size_t i = 0; i < pending.size(); i++) {
+      ClearSoundInfo();
+      DoEffectInternal2(pending.effect(i), pending.location(i));
+    }
   }
 
   static void DoOn(EffectLocation location) {

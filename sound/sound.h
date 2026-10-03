@@ -132,19 +132,18 @@ void DodgeSound(uint32_t millis) {
   undodge.start(millis);
 }
 
-bool PlayErrorMessage(const char* filename) {
-  RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
-  if (!ret) return false;
-  if (!ret->PlayInCurrentDir(filename) &&
-      !ret->PlayInDir("errors", filename)) {
-    return false;
-  }
+// Fires boot/font events that were held back while error messages played.
+class DeferredEffectPoller : public Looper {
+public:
+  const char* name() override { return "DeferredEffectPoller"; }
+  void Loop() override { SaberBase::PollDeferredEffects(); }
+};
 
-  DodgeSound(ret->length() * 1000.0);
-  ret->set_dodge(false);
-  ret->UpdateSaberBaseSoundInfo();
-  return true;
-}
+DeferredEffectPoller deferred_effect_poller;
+
+// Fwd declarations - Defined in sound_library.h after SoundQueueSingleton and SOUNDQ are available.
+bool PlayErrorMessage(const char* filename);
+bool PlayQueuedSound(Effect* effect);
 
 size_t WhatUnit(class BufferedWavPlayer* player) {
   if (!player) return -1;
