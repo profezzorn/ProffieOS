@@ -1,4 +1,4 @@
-/* V7/8-301.
+/* V-303.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -181,7 +181,8 @@ FUNCTIONS WITH BLADE OFF
                               Array Selector is point up for forwards, down for backwards.
   Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
                               Release once announcement starts.
-  Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
+  Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously,
+                            or hold POWER and clash.
     Volume up               Click POWER while in VOLUME MENU, hilt pointing up.
     Volume down             Click POWER while in VOLUME MENU, hilt pointing down, OR click
                               AUX while in VOLUME MENU.
@@ -1279,13 +1280,10 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 
     // ENTER VOLUME MENU
-#if NUM_BUTTONS == 1
-    // 1 button
+    // 1 button hilts, or 2 button hilts where both buttons cannot be pressed simultaneously.
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-#else
-    // 2 button
+    // 2 button.
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
-#endif
       if (!mode_volume_) {
         mode_volume_ = true;
         if (SFX_vmbegin) {
