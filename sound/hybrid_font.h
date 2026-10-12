@@ -612,8 +612,13 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
-      case EFFECT_NEWFONT: SB_NewFont(); return;
+      case EFFECT_BOOT:
+        if (QueueSoundAfterErrors(&SFX_boot)) return;
+        PlayPolyphonic(&SFX_boot);
+        return;
+      case EFFECT_NEWFONT:
+        if (QueueSoundAfterErrors(&SFX_font, 0.05f, 1046.5f)) return;
+        SB_NewFont(); return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
