@@ -67,7 +67,13 @@ These equate to Fett263 "Special Abilities" 1-8.
 EFFECT_USER1 through 4 work when blade is ON.
 EFFECT_USER5 through 8 work when blade is OFF.
 USER 3, 4, 7, 8 are done "while pointing up" on 1 button setups, or the AUX button for 2 button sabers.
-
+---------------------
+Note for EFFECT_USER2   - for blade effects with sounds that might work better without hum,
+                          this plays sounds monophonically.
+                          (think seismic charge silence, iceblade etc...)
+                        - monosfx.wav files are used if they exist, otherwise force.wav.
+                          It can be just the sound, or a blade effect too by using EFFECT_USER2 in a TransitionEffectL.
+---------------------
 EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies
                           a transparent amount of Black to the base blade color.
                           Layer example: 50% brightness reduction
@@ -1179,6 +1185,7 @@ EFFECT(array);      // for Manual Blade Array switching
 #ifdef BC_BUTTON_CLICKER
 EFFECT(press);      // for button press clicks when OFF only.
 #endif
+EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -3009,7 +3016,13 @@ any # of buttons
       case EFFECT_TRANSITION_SOUND:
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
         return;
-
+      case EFFECT_USER2: // Monoforce
+        if (SFX_monosfx) {
+          hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
+        } else {
+          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        }
+        return;
     }
   }  // SB_Effect
 
