@@ -55,9 +55,6 @@ private:
   const char* filename_;
 };
 
-
-
-// Runs an arbitrary function when this queue item is dequeued.
 // Used to start talkie/beeper error phrases without a wav player.
 class SoundToPlayFn : public SoundToPlayBase {
 public:
