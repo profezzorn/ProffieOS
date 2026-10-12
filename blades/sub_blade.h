@@ -134,20 +134,20 @@ public:
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
     // If a SubBlade only addresses a few of the LEDs,
-	// Start the frame by turning the whole blade off.
-	// Without clearing the blade, pixels which aren't part of any SubBlade may get random values.
+  // Start the frame by turning the whole blade off.
+  // Without clearing the blade, pixels which aren't part of any SubBlade may get random values.
     blade_->clear();
     do {
       tmp->allow_disable_ = false;
       if (tmp->current_style_)
-	tmp->current_style_->run(tmp);
+  tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
     if (allow_disable) blade_->allow_disable();
   }
   bool IsHandled(HandledFeature effect) override {
-    if (current_style_)
+    if (!current_style_)
       return false;
     return current_style_->IsHandled(effect);
   }
@@ -346,7 +346,22 @@ protected:
   int count_;
 };
 
-BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
+template <int... Indices>
+struct MaxIndex;
+template <>
+struct MaxIndex<> {
+  enum { value = -1 };
+};
+template <int First, int... Rest>
+struct MaxIndex<First, Rest...> {
+  enum {
+    value = First > MaxIndex<Rest...>::value
+                ? First
+                : MaxIndex<Rest...>::value
+  };
+};
+BladeBase* SubBladeWithList(const int* indices, int count,
+                            int max_index, BladeBase* blade) {
   if (blade) {
     first_subblade_wrapper = last_subblade_wrapper = NULL;
   } else {
@@ -356,9 +371,7 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
 
   // Unmapped LEDs are allowed; a negative mapping means that this
   // sub-blade LED has no corresponding LED on the underlying blade.
-	for (int i = 0; i < count; i++) {
-    if (indices[i] >= blade->num_leds()) return NULL;
-  }
+  if (max_index >= blade->num_leds()) return NULL;
 
   SubBladeWrapperWithList* ret = new SubBladeWrapperWithList(indices, count);
 
@@ -379,7 +392,7 @@ BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
 template <int... Indices>
 BladeBase* SubBladeWithList(BladeBase* blade) {
   static const int arr[sizeof...(Indices)] = { Indices... };
-  return SubBladeWithList(arr, sizeof...(Indices), blade);
+  return SubBladeWithList( arr, sizeof...(Indices), MaxIndex<Indices...>::value, blade);
 }
 
 class BarBackWrapper : public SubBladeWrapper {
@@ -391,9 +404,9 @@ public:
     int channel = led % 3;
     if (cnt_ == 0) {
       if (chip == 3) {
-	cnt_ = 1;
+  cnt_ = 1;
       } else {
-	cnt_ = 3;
+  cnt_ = 3;
       }
     }
     int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);
