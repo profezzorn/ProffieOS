@@ -404,9 +404,9 @@ public:
     int channel = led % 3;
     if (cnt_ == 0) {
       if (chip == 3) {
-  cnt_ = 1;
+        cnt_ = 1;
       } else {
-  cnt_ = 3;
+        cnt_ = 3;
       }
     }
     int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);

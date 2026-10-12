@@ -60,6 +60,7 @@ Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts
                           as the battery gets weaker, changing blade color
                           from Green to Red, and the blade length shortens.
+
 User Effects: 
 These equate to Fett263 "Special Abilities" 1-8.
 - Can be built into blade style code to trigger anything that takes an EFFECT_XXXXX argument.
@@ -199,6 +200,8 @@ Next Preset               - Long Click then release POW (NOT pointing UP or DOWN
 Prev Preset               - Long Click then release POW (while pointing DOWN).
 Jump to First Preset      - Long Click then release POW (while pointing UP).
 Play/Stop Track           - 4x Click POW.
+Next Track                - 4x Click POW and Hold.
+                            * Note - Next Track auto plays track.
 BC Volume Menu:
         Enter Menu        - Hold POW and Clash.
         Volume UP         - Rotate Right.
@@ -232,12 +235,14 @@ User Effect 5             - Hold POW then Rotate Left 60 degrees. (keep holding 
 User Effect 6             - Hold POW then Rotate Right 60 degrees. (keep holding POW until executed)
                             * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1 and 2.
-Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (3x Click then Long Click)
-Next Blade Array          - 4x Click POW and Hold.
-                            * Cycles to the next blade array in BladeConfig
+Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (NOT pointing UP).
+Next Blade Array          - 4x Click POW and Hold, release after one second (while pointing UP).
+                            * Cycles to the next blade array in BladeConfig.
 
 -------- When blade is ON -------
 Play/Stop Track           - 4x Click POW.
+Next Track                - 4x Click POW and Hold (NOT pointing UP or DOWN)
+                            * Note - Next Track auto plays track.
 Next Preset Fast          - Hold POW and Twist (NOT pointing UP or DOWN).
                             * Fast switching presets bypasses preon and font.wav.
 Previous Preset Fast      - Hold POW and Twist (while pointing DOWN).
@@ -310,9 +315,9 @@ stab
 swing
 1 click                 - turn blade ON
                           turn blade ON bypass preon (pointing up)
-1 click long            - first preset (pointing up)
-                          next preset
+1 click long            - next preset
                           previous preset (pointing down)
+                          first preset (pointing up)
 1 click held            - enter/exit scroll presets
     then twist          - turn blade ON muted (back and forth twist)
     then clash          - enter BC volume menu
@@ -328,8 +333,8 @@ swing
                           spoken battery level in volts (pointing down)
 4 clicks                - play / stop track
 4 clicks long           - manually trigger blade ID scan
-4 clicks held           - manually switch to next blade array
-
+                          manually switch to next blade array (pointing up)
+4 clicks held           - next track
 twist                   - turn blade ON (requires #define BC_TWIST_ON)
 - BC volume menu:
     rotate right        - volume UP
@@ -346,16 +351,16 @@ twist                   - turn blade ON (requires #define BC_TWIST_ON)
 1 click long
 1 click held            - turn blade OFF
                           turn blade OFF bypass postoff (pointing up)
-    then twist          - first preset fast (pointing up)
-                          next preset fast
+    then twist          - next preset fast
                           previous preset fast (pointing down)
+                          first preset fast (pointing up)
     then clash          - lockup
                           drag (pointing down)
     then rotate left    - user effect 1 (keep holding POW until executed)
     then rotate right   - user effect 2 (keep holding POW until executed)
 2 clicks                - blaster deflection
-2 clicks long           - force (not pointing up)
-                        - toggle battle mode (pointing up)
+2 clicks long           - force
+                          toggle battle mode (pointing up)
 2 clicks held           - lightning block (release to end)
 3 clicks                - quote
                           toggle sequential or random quotes (pointing down)
@@ -363,9 +368,9 @@ twist                   - turn blade ON (requires #define BC_TWIST_ON)
 3 clicks held           - color change mode
 4 clicks                - play / stop track
 4 clicks long
-4 clicks held           - dim (pointing up)
+4 clicks held           - next track
                           toggle spam blasts (pointing down)
-
+                          dim (pointing up)
 hit object              - clash
 twist                   - turn blade OFF (requires #define BC_TWIST_OFF)
 thrust (air)            - stab
@@ -398,6 +403,8 @@ Next Preset               - Click AUX (NOT pointing UP or DOWN).
 Prev Preset               - Click AUX (while pointing DOWN).
 Jump to First Preset      - Click AUX (while pointing UP).
 Play/Stop Track           - Long Click then release POW.
+Next Track                - 4x Click POW and Hold.
+                            * Note - Next Track auto plays track.
 BC Volume Menu:
         Enter Menu        - Hold POW + Click AUX.
         Volume UP         - Rotate Right.
@@ -431,12 +438,14 @@ User Effect 7             - Hold AUX then Rotate Left 60 degrees. (keep holding 
 User Effect 8             - Hold AUX then Rotate Right 60 degrees. (keep holding AUX until executed)
                             * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1,2,3,4.
-Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (3x Click then Long Click)
-Next Blade Array          - 4x Click POW and Hold.
+Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (NOT pointing UP).
+Next Blade Array          - 4x Click POW and Hold, release after one second (while pointing UP).
                             * Cycles to the next blade array in BladeConfig
 
 -------- When blade is ON -------
 Play/Stop Track           - Long Click then release POW.
+Next Track                - 4x Click POW and Hold (NOT pointing UP or DOWN)
+                            * Note - Next Track auto plays track.
 Next Preset Fast          - Hold POW and Twist (NOT pointing UP or DOWN).
                             * Fast switching presets bypasses preon and font.wav.
 Previous Preset Fast      - Hold POW and Twist (while pointing DOWN).
@@ -531,8 +540,8 @@ swing
 3 clicks POW            - quote
                           toggle sequential or random quotes (pointing down)
 4 clicks long           - manually trigger blade ID scan
-4 clicks held           - manually switch to next blade array
-
+                          manually switch to next blade array (pointing up)
+4 clicks held           - next track
 - BC Volume Menu
     rotate right        - volume UP
     rotate left         - volume DOWN
@@ -575,8 +584,8 @@ Hold POW
                           toggle sequential or random quotes (pointing down)
 3 clicks POW long       - revert colorchange to config
 3 clicks POW held       - color change mode
-4 clicks POW held       - toggle spam blasts (pointing down)
-
+4 clicks POW held       - next track
+                          toggle spam blasts (pointing down)
 ON COMBOS:
 Hold POW
     then click AUX      - lightning block (keep holding POW, release to end)
@@ -597,7 +606,7 @@ push                    - force push
 |
 |   I attempted to keep the controls for this Dual Blade version familiar from the previous version of this prop.
 |   Much of it was rewritten from ground up, but I have tested extensively and I think the layout makes sense intuitively.
-|   In the spitit of comradery, I adopted many of the 2 button controls from the saber_fett263_buttons prop file.
+|   In the spirit of comradery, I adopted many of the 2 button controls from the saber_fett263_buttons prop file.
 |   I never had really thought out much for the 2 button portion of this BC prop as I'm mostly a 1 button kind of guy.
 |   So, not being too concerned, and also knowing how much time and effort was put into crafting the fett263 prop,
 |   I'm pretty sure it's the right controls to provide for any 2 button users.
@@ -654,6 +663,9 @@ push                    - force push
 | Prev Preset                          - Long Click and release POW (while pointing MAIN Blade DOWN).
 | Jump to First Preset                 - Long Click and release POW (while pointing MAIN Blade UP).
 | Play/Stop Track                      - 4x Click POW.
+| Next Track                           - 4x Click POW and Hold (NOT pointing UP)
+|                                        * Note - Next Track auto plays track.
+|
 | BC Volume Menu:
 |         Enter Menu                   - Hold POW and Clash.
 |         Volume UP                    - Rotate Right.
@@ -683,12 +695,13 @@ push                    - force push
 | User Effect 6                        - Hold POW then Rotate Right 60 degrees. (keep holding POW until executed)
 |                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1 and 2.
-||||||| NOT AVAILABLE Trigger Blade ID Scan     - 4x click POW and Hold, release after one second (3x Click then Long Click)
-| Next Blade Array          - 4x click POW and Hold.
-|                             * Cycles to the next blade array in BladeConfig
+||| NOT AVAILABLE Trigger Blade ID Scan
+||| NOT AVAILABLE Next Blade Array
 |
 |-------- When a blade is ON --------
 | Play/Stop Track                      - 4x Click POW.
+| Next Track                           - 4x Click POW and Hold (NOT pointing UP or DOWN)
+|                                        * Note - Next Track auto plays track.
 | Next Preset Fast                     - Hold POW and Twist (NOT pointing UP or DOWN).
 |                                        * Fast switching presets bypasses preon and font.wav.
 | Previous Preset Fast                 - Hold POW and Twist (while pointing DOWN).
@@ -776,8 +789,8 @@ push                    - force push
 |                           spoken battery level in volts (pointing down)
 | 4 clicks                - play / stop track
 | 4 clicks long           - turn second blade ON first muted
-||||||||| NOT AVAILABLE     4 clicks long           - manually trigger blade ID scan
-| 4 clicks held           - manually switch to next blade array
+| 4 clicks held           - next track
+|
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
@@ -810,8 +823,9 @@ push                    - force push
 | 3 clicks held           - color change mode
 | 4 clicks                - play / stop track
 | 4 clicks long
-| 4 clicks held           - dim (pointing up)
+| 4 clicks held           - next track
 |                           toggle spam blasts (pointing down)
+|                           dim (pointing up)
 | hit object              - clash
 | twist                   - turn all blades OFF (requires #define BC_TWIST_OFF)
 | thrust (air)            - stab
@@ -852,6 +866,10 @@ push                    - force push
 | Next Preset                          - Click and Hold AUX, release after a second (NOT pointing UP or DOWN).
 | Prev Preset                          - Click and Hold AUX, release after a second (while pointing DOWN).
 | Jump to First Preset                 - Click and Hold AUX, release after a second (while pointing UP).
+| Play/Stop Track                      - Long Click POW.
+| Next Track                           - 4x Click POW and Hold.
+|                                        * Note - Next Track auto plays track.
+|
 | BC Volume Menu:
 |         Enter Menu                   - Hold POW then Click AUX.
 |         Volume UP                    - Rotate Right.
@@ -884,12 +902,14 @@ push                    - force push
 | User Effect 8                        - Hold AUX then Rotate Right 60 degrees. (keep holding AUX until executed)
 |                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1,2,3,4.
-| Trigger Blade ID Scan     - 4x click POW and Hold, release after one second (3x Click then Long Click)
-| Next Blade Array          - 4x click POW and Hold.
-|                             * Cycles to the next blade array in BladeConfig
+| Trigger Blade ID Scan                - 4x Click POW and Hold, release after one second (NOT pointing UP).
+| Next Blade Array                     - 4x Click POW and Hold, release after one second (while pointing UP).
+|                                        * Cycles to the next blade array in BladeConfig
 |
 |-------- When a blade is ON -------
-| Play/Stop Track                    - Long Click POW.
+| Play/Stop Track                      - Long Click POW.
+| Next Track                           - 4x Click POW and Hold.
+|                                        * Note - Next Track auto plays track.
 | Next Preset Fast                     - Hold POW and Twist (NOT pointing UP or DOWN).
 |                                        * Fast switching presets bypasses preon and font.wav.
 | Previous Preset Fast                 - Hold POW and Twist (while pointing DOWN).
@@ -982,7 +1002,8 @@ push                    - force push
 | 3 clicks POW            - quote
 |                           toggle sequential or random quotes (pointing down)
 | 4 clicks long           - manually trigger blade ID scan
-| 4 clicks held           - manually switch to next blade array
+|                           manually switch to next blade array (pointing up)
+| 4 clicks held           - next track
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
@@ -1028,7 +1049,8 @@ push                    - force push
 |                           toggle sequential or random quotes (main blade pointing down)
 | 3 clicks POW long       - revert colorchange to config
 | 3 clicks POW held       - color change mode
-| 4 clicks POW held       - toggle spam blasts (pointing down)
+| 4 clicks POW held       - next track
+|                           toggle spam blasts (pointing down)
 |
 | ON COMBOS:
 | Hold POW
@@ -1505,6 +1527,10 @@ public:
 
   void Loop() override {
     PropBase::Loop();
+    if (track_player_ && !track_player_->isPlaying()) {
+      PVLOG_NORMAL << "** Track ended\n";
+      track_player_.Free();
+    }
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
@@ -1762,7 +1788,7 @@ void DoSavedTwist() {
   void DoTrackStartOrStop() {
     if (spam_blast_) return;
     PVLOG_NORMAL << "** Track playback Toggled\n";
-    StartOrStopTrack();
+    PlayStopTrack();
   }
 
   void DoLockup() {
@@ -2100,9 +2126,93 @@ void DoSavedTwist() {
     }
   }
 
+  bool chdir(const StringPiece dir) override {
+    if (track_player_) {
+      track_player_->Stop();
+      track_player_.Free();
+    }
+
+    bool ret = PropBase::chdir(dir);
+    track_[0] = 0;
+    return ret;
+  }
+
+  bool PlayTrack() {
+    if (!track_[0]) {
+      if (!RunCommandAndFindNextSortedLine<128>(
+              "list_current_tracks", nullptr, nullptr, track_, false)) {
+        return false;
+      }
+    }
+
+    PVLOG_NORMAL << "** Playing track = " << track_ << "\n";
+
+    MountSDCard();
+    EnableAmplifier();
+
+    track_player_ = GetFreeWavPlayer();
+    if (track_player_) {
+      track_player_->Play(track_);
+      return true;
+    }
+
+    return false;
+  }
+
+  void PlayStopTrack() {
+    if (track_player_ && track_player_->isPlaying()) {
+      track_player_->Stop();
+      track_player_.Free();
+      PVLOG_NORMAL << "** Track stopped\n";
+      return;
+    }
+
+    if (track_player_) {
+      track_player_.Free();
+    }
+
+    PlayTrack();
+  }
+
+  void NextTrack() {
+    // Hot switch: stop the current track first.
+    if (track_player_ && track_player_->isPlaying()) {
+      track_player_->Stop();
+      track_player_.Free();
+    }
+
+    char next_track[128];
+    next_track[0] = 0;
+
+    if (!RunCommandAndFindNextSortedLine<128>(
+            "list_current_tracks", nullptr, track_, next_track, false)) {
+      if (!RunCommandAndFindNextSortedLine<128>(
+              "list_current_tracks", nullptr, nullptr, next_track, false)) {
+        return;
+      }
+    }
+
+    strcpy(track_, next_track);
+
+    PVLOG_NORMAL << "** NextTrack: " << track_ << "\n";
+
+    PlayTrack();
+  }
+
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
 
+    if (!strcmp(cmd, "list_current_tracks")) {
+      LOCK_SD(true);
+      for (const char* dir = current_directory;
+           dir;
+           dir = next_current_directory(dir)) {
+        PathHelper path(dir, "tracks");
+        ListTracks(path);
+      }
+      LOCK_SD(false);
+      return true;
+    }
     if (!strcmp(cmd, "twist")) {
         Event(BUTTON_NONE, EVENT_TWIST);
         return true;
@@ -2119,6 +2229,8 @@ void DoSavedTwist() {
   }
 
   RefPtr<BufferedWavPlayer> wav_player;
+  RefPtr<BufferedWavPlayer> track_player_;
+  char track_[128] = "";
 
 #ifdef BC_BUTTON_CLICKER
   bool Event(enum BUTTON button, EVENT event) override {
@@ -2278,6 +2390,8 @@ any # of buttons
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
           return true;
         }
+        // neutral
+        NextTrack();
         return true;
 
 #endif  // NUM_BUTTONS == 1
@@ -2451,7 +2565,11 @@ any # of buttons
         // pointing DOWN
         if (fusor.angle1() < -M_PI / 3) {
           ToggleSpamBlast();
+          return true;
         }
+
+        // NOT pointing UP
+        NextTrack();
         return true;
 
 #endif  // NUM_BUTTONS == 2 || NUM_BUTTONS == 3
@@ -2626,17 +2744,22 @@ any # of buttons
         return true;
 #endif  // BC_FORCE_PUSH
 
-// Manually cycle to Next Blade Array
+// Next Track
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
-    PVLOG_NORMAL << "**** BUTTON EVENT Manually Cycling Blade Array\n";
-    NextBladeArray();
+    NextTrack();
     return true;
 
-// Manually trigger Blade ID scan
+// Manually cycle to Next Blade Array - pointing UP
+// Manually trigger Blade ID scan - NOT pointing UP
 #if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // only not available for 1 btn dual blades.
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
-    PVLOG_NORMAL << "**** BUTTON EVENT Manually triggering native Blade ID\n";
-    TriggerBladeID();
+    if (isPointingUp()) {
+      PVLOG_NORMAL << "** Manually Cycling Blade Array\n";
+      NextBladeArray();
+    } else {
+      PVLOG_NORMAL << "** Manually triggering native Blade ID\n";
+      TriggerBladeID();
+    }
     return true;
 #endif
 
