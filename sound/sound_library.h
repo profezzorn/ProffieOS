@@ -104,6 +104,43 @@ private:
 
 #define SOUNDQ (getPtr<SoundQueueSingleton>())
 
+// If error audio is queued or playing, queue *effect (or a beep) to run after it.
+// Returns true when we should not play the sound yet.
+inline bool QueueSoundAfterErrors(Effect* effect, float beep_len, float beep_freq) {
+  if (!SOUNDQ->holding_errors()) return false;
+  if (effect && *effect) {
+    SOUNDQ->Play(SoundToPlayFileID(effect->RandomFile()));
+  } else if (beep_len > 0.0f) {
+    SOUNDQ->Play(SoundToPlayBeep(beep_len, beep_freq, false));
+  }
+  return true;
+}
+
+inline bool PlayErrorMessage(const char* filename) {
+  // Check font dirs, then errors folder before queuing so Talkie is suppressed only if WAV exists.
+  bool found = false;
+  bool in_font = false;
+  for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+    PathHelper full_name(dir, filename);
+    if (LSFS::Exists(full_name)) { found = true; in_font = true; break; }
+  }
+  if (!found) {
+    PathHelper err_path("errors", filename);
+    found = LSFS::Exists(err_path);
+  }
+  if (!found) {
+    PVLOG_DEBUG << "*** Error wav not found: " << filename
+                 << " — falling through to talkie/beeper\n";
+    return false;
+  }
+  PVLOG_DEBUG << "*** Error wav found in "
+               << (in_font ? "font" : "errors/") << " folder: " << filename << "\n";
+  if (!SOUNDQ->Play(SoundToPlayErrorFile(filename))) return false;
+  // Sound_length is still 0. Set a non-zero value now so errors.h suppresses Talkie immediately.
+  if (SaberBase::sound_length < 0.001f) SaberBase::sound_length = 0.001f;
+  return true;
+}
+
 class SoundLibrary  {
 public:
   static const int SoundLibraryVersion = 1;
