@@ -104,8 +104,8 @@ private:
 
 #define SOUNDQ (getPtr<SoundQueueSingleton>())
 
-// If error audio is queued or playing, enqueue *effect (or a beep) to run after it.
-// Returns true when the caller should not play the sound now.
+// If error audio is queued or playing, queue *effect (or a beep) to run after it.
+// Returns true when we should not play the sound yet.
 inline bool QueueSoundAfterErrors(Effect* effect, float beep_len, float beep_freq) {
   if (!SOUNDQ->holding_errors()) return false;
   if (effect && *effect) {
