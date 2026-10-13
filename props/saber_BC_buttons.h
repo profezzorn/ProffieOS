@@ -1969,7 +1969,7 @@ void DoSavedTwist() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_secondBlade_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_mainBlade_delay_timer_.trigger(0);
+      mute_secondBlade_delay_timer_.trigger(0);
     }
   }
 
@@ -2331,6 +2331,13 @@ any # of buttons
             DoLightningBlock();
           }
         }
+        return true;
+
+// Force
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        if (spam_blast_ || on_pending_) return false;
+        if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
+        SaberBase::DoForce();
         return true;
 
 #endif  // BC_DUAL_BLADES
