@@ -681,6 +681,7 @@ public:
     file_.Play(effect);
     frame_available_ = false;
     frame_count_ = 0;
+    got_frame_ = false;
     screen_ = SCREEN_IMAGE;
     eof_ = false;
     current_effect_ = effect;
@@ -703,6 +704,7 @@ public:
     file_.Play(file);
     frame_available_ = false;
     frame_count_ = 0;
+    got_frame_ = false;
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
   }
@@ -736,7 +738,9 @@ public:
       int width, height;
       switch (TAG2(a, b)) {
         default:
-          STDERR << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+          if (!got_frame_) {
+            STDERR << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+          }
           return false;
 
         case TAG2('P', '4'):
@@ -869,8 +873,11 @@ public:
       if (tmp) {
         frame_available_ = true;
         last_state_ = state;
+        got_frame_ = true;
       } else {
-        STDERR << "read image fail\n";
+        if (!got_frame_) {
+          STDERR << "read image fail\n";
+        }
         eof_ = true;
       }
     }
@@ -915,6 +922,7 @@ private:
   int32_t frame_count_ = 0;
   volatile int32_t looped_frames_ = 0;
   int32_t ypos_ = 0;
+  bool got_frame_ = false;
   bool lock_fb_ = false;
   ReadState last_state_;
   volatile bool advance_ = true;
