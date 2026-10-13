@@ -1221,17 +1221,66 @@ EFFECT(array);      // for Manual Blade Array switching
 EFFECT(press);      // for button press clicks when OFF only.
 #endif
 
+// Avoid edits to prop_base.h or ProffieOS.ino.
+struct BCPresetScroller {
+  virtual void ScrollPresets(int delta) = 0;
+};
+BCPresetScroller* bc_preset_scroller = nullptr;
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
+  static constexpr uint32_t SETTLE_MS = 350;
+  int pending_ = 0;
+  uint32_t last_click_ = 0;
+
+  // Fade out anything playing (font.wav, hum, etc.) so the click beeps are audible.
+  // Non-blocking, only starts the fade.
+  void FadeOutAudio() {
+#ifdef ENABLE_AUDIO
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      if (wav_players[unit].isPlaying()) {
+        wav_players[unit].set_fade_time(0.02);
+        wav_players[unit].FadeAndStop();
+      }
+    }
+#endif
+  }
+
+  void applyPending() {
+    if (pending_ == 0) return;
+    int delta = pending_;
+    pending_ = 0;
+    if (bc_preset_scroller) bc_preset_scroller->ScrollPresets(delta);
+  }
+
+  void mode_activate(bool onreturn) override {
+    SPEC::SteppedMode::mode_activate(onreturn);
+    pending_ = 0;
+  }
+
+  void mode_deactivate() override {
+    applyPending();
+    SPEC::SteppedMode::mode_deactivate();
+  }
+
+  void mode_Loop() override {
+    SPEC::SteppedMode::mode_Loop();
+    if (pending_ != 0 && (uint32_t)(millis() - last_click_) > SETTLE_MS) {
+      applyPending();
+    }
+  }
 
   void next() override {
+    FadeOutAudio();
     beeper.Beep(0.05, 4000);
-    prop_next_preset();
+    pending_++;
+    last_click_ = millis();
   }
 
   void prev() override {
+    FadeOutAudio();
     beeper.Beep(0.05, 3000);
-    prop_previous_preset();
+    pending_--;
+    last_click_ = millis();
   }
 
   void update() override {  // Overridden to substitute the tick sound
@@ -1241,6 +1290,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
   }
 
   void exit() override {
+    applyPending();
     PVLOG_NORMAL << "** Exit Scroll Presets\n";
     beeper.Beep(0.05, 3000);
     beeper.Silence(0.05);
@@ -1255,6 +1305,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
     switch (EVENTID(button, event, 0)) {
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, 0):
+        applyPending();
         SaberBase::TurnOn();
         exit();
         return true;
@@ -1514,10 +1565,41 @@ private:
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberBCButtons : public PROP_INHERIT_PREFIX PropBase {
+class SaberBCButtons : public PROP_INHERIT_PREFIX PropBase, public BCPresetScroller {
 public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
+
+  // Avoid pops: fade out whatever is playing before the preset swap touches the SD card.
+  void SetPreset(int preset_num, bool announce) override {
+#ifdef ENABLE_AUDIO
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      if (wav_players[unit].isPlaying()) {
+        wav_players[unit].set_fade_time(0.02);
+        wav_players[unit].FadeAndStop();
+      }
+    }
+    uint32_t start = millis();
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      while (wav_players[unit].isPlaying() && millis() - start < 50) delay(1);
+    }
+#endif
+    PropBase::SetPreset(preset_num, announce);
+  }
+
+  void goto_preset(int preset) {
+#ifdef SAVE_PRESET
+    SaveState(preset);
+#endif
+    SetPreset(preset, true);
+  }
+
+  // Called by BCScrollPresetsMode with the net number of clicks.
+  void ScrollPresets(int delta) override {
+    int n = current_config->num_presets;
+    int target = ((current_preset_.preset_num + delta) % n + n) % n;
+    if (target != current_preset_.preset_num) goto_preset(target);
+  }
 
 #ifndef MENU_SPEC_TEMPLATE
   void Setup() override{
@@ -1562,6 +1644,7 @@ public:
       SFX_font.SetFollowing(nullptr);
 #endif
       scroll_presets_beep_delay_timer_.trigger(350);
+      bc_preset_scroller = this;
       pushMode<MKSPEC<BCMenuSpec>::BCScrollPresetsMenu>();
     }
   }
