@@ -70,9 +70,9 @@ public:
     m = (m << ( sizeof(col_t) * 4)) - 1;
     for (j = sizeof(col_t)*4; j != 0; j = j >> 1, m = m ^ (m << j)) {
       for (k = 0; k < (int)(sizeof(col_t) * 8); k = (k + j + 1) & ~j) {
-  t = (A[k] ^ (A[k+j] >> j)) & m; 
-  A[k] = A[k] ^ t; 
-  A[k+j] = A[k+j] ^ (t << j); 
+	t = (A[k] ^ (A[k+j] >> j)) & m; 
+	A[k] = A[k] ^ t; 
+	A[k+j] = A[k+j] ^ (t << j); 
       } 
     }
   }
@@ -123,22 +123,22 @@ public:
     for (uint32_t j = 0; j < NELEM(bits); j++) bits[j] = 0;
     for (int w = 0; w < WIDTH; w++) {
       if ((bits[w >> 5] >> (w & 31)) & 1) {
-  // this word has already been moved
-  continue;
+	// this word has already been moved
+	continue;
       }
       size_t blocks_per_row = WIDTH / (sizeof(col_t) * 8);
 #if 1
       int from = w;
       col_t tmp = frame_buffer_[from];
       do {
-  tmp = ReverseBytes(tmp);
-  int block_x = from % blocks_per_row;
-  int row = from / blocks_per_row;
-  if (!invert_y) row = wordsize - 1 - row;
-  int dest = block_x * wordsize + row;
-  std::swap(tmp, frame_buffer_[dest]);
-  bits[dest >> 5] |= 1 << (dest & 31);
-  from = dest;
+	tmp = ReverseBytes(tmp);
+	int block_x = from % blocks_per_row;
+	int row = from / blocks_per_row;
+	if (!invert_y) row = wordsize - 1 - row;
+	int dest = block_x * wordsize + row;
+	std::swap(tmp, frame_buffer_[dest]);
+	bits[dest >> 5] |= 1 << (dest & 31);
+	from = dest;
       } while (from != w);
 #endif      
     }
@@ -202,20 +202,20 @@ public:
           Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
           break;
 #if MAX_GLYPH_HEIGHT >= 16
-        case 1:
-          Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
-          break;
-#endif  
+      case 1:
+        Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
+        break;
+#endif	
 #if MAX_GLYPH_HEIGHT >= 32
-        case 3:
-          Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
-          break;
-#endif  
+      case 3:
+        Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
+        break;
+#endif	
 #if MAX_GLYPH_HEIGHT >= 64
-        case 7:
-          Draw2<uint64_t>(begin, end, pos, y, (const uint64_t*)glyph.data);
-          break;
-#endif  
+      case 7:
+        Draw2<uint64_t>(begin, end, pos, y, (const uint64_t*)glyph.data);
+        break;
+#endif	
       }
       return;
     }
