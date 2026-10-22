@@ -70,13 +70,6 @@ EFFECT_USER1 through 4 work when blade is ON.
 EFFECT_USER5 through 8 work when blade is OFF.
   - 1 button sabers: 5(L) and 6(R) while NOT pointing UP. 7(L) and 8(R) while pointing UP.
   - 2 button sabers: 5(L) and 6(R) while holding POW.     7(L) and 8(R) while holding AUX.
----------------------
-Note for EFFECT_USER2   - for blade effects with sounds that might work better without hum,
-                          this plays sounds monophonically.
-                          (think seismic charge silence, iceblade etc...)
-                        - monosfx.wav files are used if they exist, otherwise force.wav.
-                          It can be just the sound, or a blade effect too by using EFFECT_USER2 in a TransitionEffectL.
----------------------
 EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies
                           a transparent amount of Black to the base blade color.
                           Layer example: 50% brightness reduction
@@ -1220,7 +1213,6 @@ EFFECT(array);      // for Manual Blade Array switching
 #ifdef BC_BUTTON_CLICKER
 EFFECT(press);      // for button press clicks when OFF only.
 #endif
-EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 
 // Avoid edits to prop_base.h or ProffieOS.ino.
 // Plays font.wav from the scrolled-to directory without chdir().
@@ -2205,7 +2197,7 @@ void DoSavedTwist() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_secondBlade_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_secondBlade_delay_timer_.trigger(0);
+      mute_mainBlade_delay_timer_.trigger(0);
     }
   }
 
@@ -2575,13 +2567,6 @@ any # of buttons
             DoLightningBlock();
           }
         }
-        return true;
-
-// Force
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-        if (spam_blast_ || on_pending_) return false;
-        if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
-        SaberBase::DoForce();
         return true;
 
 #endif  // BC_DUAL_BLADES
@@ -3259,13 +3244,6 @@ any # of buttons
         return;
       case EFFECT_TRANSITION_SOUND:
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
-        return;
-      case EFFECT_USER2: // Monoforce
-        if (SFX_monosfx) {
-          hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
-        } else {
-          hybrid_font.DoEffect(EFFECT_FORCE, 0);
-        }
         return;
     }
   }  // SB_Effect
