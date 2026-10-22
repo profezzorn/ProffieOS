@@ -70,6 +70,13 @@ EFFECT_USER1 through 4 work when blade is ON.
 EFFECT_USER5 through 8 work when blade is OFF.
   - 1 button sabers: 5(L) and 6(R) while NOT pointing UP. 7(L) and 8(R) while pointing UP.
   - 2 button sabers: 5(L) and 6(R) while holding POW.     7(L) and 8(R) while holding AUX.
+---------------------
+Note for EFFECT_USER2   - for blade effects with sounds that might work better without hum,
+                          this plays sounds monophonically.
+                          (think seismic charge silence, iceblade etc...)
+                        - monosfx.wav files are used if they exist, otherwise force.wav.
+                          It can be just the sound, or a blade effect too by using EFFECT_USER2 in a TransitionEffectL.
+---------------------
 EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies
                           a transparent amount of Black to the base blade color.
                           Layer example: 50% brightness reduction
