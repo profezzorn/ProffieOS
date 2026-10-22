@@ -2460,14 +2460,6 @@ void DoSavedTwist() {
   RefPtr<BufferedWavPlayer> track_player_;
   char track_[128] = "";
 
-// Stashed just in case someday...
-  // void PlaySound(const char* sound) {
-  //   RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-  //   if (player) {
-  //     if (!player->PlayInCurrentDir(sound)) player->Play(sound);
-  //   }
-  // }
-
 #ifdef BC_BUTTON_CLICKER
   bool Event(enum BUTTON button, EVENT event) override {
     // Play clicker only when saber is OFF and a button is PRESSED
