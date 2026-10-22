@@ -1220,22 +1220,68 @@ EFFECT(array);      // for Manual Blade Array switching
 #ifdef BC_BUTTON_CLICKER
 EFFECT(press);      // for button press clicks when OFF only.
 #endif
+EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 
 // Avoid edits to prop_base.h or ProffieOS.ino.
+// Plays font.wav from the scrolled-to directory without chdir().
+struct BCSoundFontPreview : public SoundToPlayBase {
+  explicit BCSoundFontPreview(const char* dir) : dir_(dir) {}
+  bool Play(BufferedWavPlayer* player) override {
+    // Play the first font*.wav found
+    char pick[64];
+    bool found = false;
+    LOCK_SD(true);  // mounts the card; the iterator finds nothing if it's unmounted
+    {
+      LSFS::Iterator iter(dir_);
+      for (; iter; ++iter) {
+        const char* n = iter.name();
+        size_t len = strlen(n);
+        if (iter.isdir() || len < 8 || len >= sizeof(pick)) continue;
+        if (strncasecmp(n, "font", 4) != 0) continue;
+        if (strcasecmp(n + len - 4, ".wav") != 0) continue;
+        // After "font", allow only: nothing, digits, or spaces + digits
+        const char* p = n + 4;
+        const char* end = n + len - 4;
+        while (p < end && *p == ' ') p++;
+        while (p < end && isdigit((unsigned char)*p)) p++;
+        if (p != end) continue;
+        strcpy(pick, n);
+        found = true;
+        break;
+      }
+    }
+    LOCK_SD(false);
+    if (!found) return player->PlayInDir(dir_, "font.wav");
+    //PVLOG_NORMAL << "** Playing " << dir_ << "/" << pick << "\n";
+    PVLOG_NORMAL << "unit = 1 vol = 0.50, Playing " << dir_ << "/" << pick << "\n";
+    return player->PlayInDir(dir_, pick);
+  }
+  const char* dir_;
+};
+
 struct BCPresetScroller {
-  virtual void ScrollPresets(int delta) = 0;
+  // announced = font.wav of the target was already previewed, so just switch silently.
+  virtual void ScrollPresets(int delta, bool announced = false) = 0;
+  // Preview the target preset's font.wav (preceded by its number if BC_ANNOUNCE_PRESET_NUM)
+  // WITHOUT calling SetPreset() to make it snappy and responsive..
+  virtual void AnnouncePreset(int delta) = 0;
 };
 BCPresetScroller* bc_preset_scroller = nullptr;
+
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
-  static constexpr uint32_t SETTLE_MS = 350;
+  static constexpr uint32_t SETTLE_MS = 500;
   int pending_ = 0;
   uint32_t last_click_ = 0;
+  bool announced_ = false;  // font.wav (and number) of the target were queued
+  uint32_t announced_time_ = 0;
+  bool scrolled_ = false;  // any rotation click since last apply
 
-  // Fade out anything playing (font.wav, hum, etc.) so the click beeps are audible.
-  // Non-blocking, only starts the fade.
+  // Fade out anything playing so the rotation beeps are audible.
   void FadeOutAudio() {
 #ifdef ENABLE_AUDIO
+    // Drop any queued number/font.wav so nothing starts after the fade.
+    SOUNDQ->clear_pending();
     for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
       if (wav_players[unit].isPlaying()) {
         wav_players[unit].set_fade_time(0.02);
@@ -1246,26 +1292,39 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
   }
 
   void applyPending() {
-    if (pending_ == 0) return;
+    if (!scrolled_) return;
+    scrolled_ = false;
     int delta = pending_;
     pending_ = 0;
-    if (bc_preset_scroller) bc_preset_scroller->ScrollPresets(delta);
+    bool announced = announced_;
+    announced_ = false;
+    if (bc_preset_scroller) bc_preset_scroller->ScrollPresets(delta, announced);
+
   }
 
   void mode_activate(bool onreturn) override {
     SPEC::SteppedMode::mode_activate(onreturn);
     pending_ = 0;
+    scrolled_ = false;
+    announced_ = false;
   }
 
   void mode_deactivate() override {
-    applyPending();
+    applyPending();  // backup plan: applies any pending click if the mode is popped without exit().
     SPEC::SteppedMode::mode_deactivate();
   }
 
   void mode_Loop() override {
     SPEC::SteppedMode::mode_Loop();
-    if (pending_ != 0 && (uint32_t)(millis() - last_click_) > SETTLE_MS) {
-      applyPending();
+    if (scrolled_) {
+      if (!announced_) {
+        // Rotation settled. Just say the target preset's number and play its font.wav.
+        if ((uint32_t)(millis() - last_click_) > SETTLE_MS && bc_preset_scroller) {
+          bc_preset_scroller->AnnouncePreset(pending_);
+          announced_ = true;
+          announced_time_ = millis();
+        }
+      }
     }
   }
 
@@ -1273,14 +1332,19 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
     FadeOutAudio();
     beeper.Beep(0.05, 4000);
     pending_++;
+    scrolled_ = true;
     last_click_ = millis();
+    announced_ = false;  // rotation resumed: abort the preview.
+
   }
 
   void prev() override {
     FadeOutAudio();
     beeper.Beep(0.05, 3000);
     pending_--;
+    scrolled_ = true;
     last_click_ = millis();
+    announced_ = false;
   }
 
   void update() override {  // Overridden to substitute the tick sound
@@ -1305,6 +1369,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
     switch (EVENTID(button, event, 0)) {
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, 0):
+        announced_ = true;   // igniting: no announce after ignition if one is queued
         applyPending();
         SaberBase::TurnOn();
         exit();
@@ -1317,6 +1382,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
     return false;
   }
 };
+
 
 template<class SPEC>
 struct BCVolumeMode : public SPEC::SteppedMode {
@@ -1568,9 +1634,9 @@ private:
 class SaberBCButtons : public PROP_INHERIT_PREFIX PropBase, public BCPresetScroller {
 public:
   SaberBCButtons() : PropBase() {}
-  const char* name() override { return "SaberBCButtons"; }
+  const char* name() override { return "SaberBCButtons_Personal"; }
 
-  // Avoid pops: fade out whatever is playing before the preset swap touches the SD card.
+  // Avoid pops - fade out whatever is playing before the preset swap touches the SD card.
   void SetPreset(int preset_num, bool announce) override {
 #ifdef ENABLE_AUDIO
     for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
@@ -1584,6 +1650,19 @@ public:
       while (wav_players[unit].isPlaying() && millis() - start < 50) delay(1);
     }
 #endif
+#ifdef BC_ANNOUNCE_PRESET_NUM
+    if (announce) {
+      // Send false to SetPreset(). Say the preset number, then queue font.wav behind it.
+      SOUNDQ->clear_pending();
+      wav_player.Free();
+      PropBase::SetPreset(preset_num, false);
+      PVLOG_NORMAL << "Current Preset Number: " << current_preset_.preset_num + 1 << "\n";
+      PVLOG_NORMAL << "Current Preset: " << current_preset_name() << "\n";
+      sound_library_.SayNumber(current_preset_.preset_num + 1, SAY_WHOLE);
+      SOUNDQ->Play(SoundToPlay(&SFX_font));
+      return;
+    }
+#endif
     PropBase::SetPreset(preset_num, announce);
   }
 
@@ -1595,11 +1674,44 @@ public:
   }
 
   // Called by BCScrollPresetsMode with the net number of clicks.
-  void ScrollPresets(int delta) override {
+  void ScrollPresets(int delta, bool announced = false) override {
     int n = current_config->num_presets;
     int target = ((current_preset_.preset_num + delta) % n + n) % n;
-    if (target != current_preset_.preset_num) goto_preset(target);
+    if (target == current_preset_.preset_num) return;
+    if (announced) {
+      // font.wav (and number) already played. Switch silently.
+#ifdef SAVE_PRESET
+      SaveState(target);
+#endif
+      wav_player.Free();
+      SetPreset(target, false);
+      PVLOG_NORMAL << "Current Preset Number: " << current_preset_.preset_num + 1 << "\n";
+      PVLOG_NORMAL << "Current Preset: " << current_preset_name() << "\n";
+      return;
+    }
+    goto_preset(target);
   }
+
+  // Play the target's font.wav (preceded by its number if BC_ANNOUNCE_PRESET_NUM) without
+  // actually touching the current preset/font.
+  // Only reads presets.ini for the font directory. The heavy SetPreset() happens afterwards.
+  void AnnouncePreset(int delta) override {
+    int n = current_config->num_presets;
+    int target = ((current_preset_.preset_num + delta) % n + n) % n;
+    CurrentPreset tmp;
+    tmp.SetPreset(target);
+    strncpy(preview_font_dir_, tmp.font.get() ? tmp.font.get() : "", sizeof(preview_font_dir_) - 1);
+    preview_font_dir_[sizeof(preview_font_dir_) - 1] = 0;
+    char* semi = strchr(preview_font_dir_, ';');  // first directory only
+    if (semi) *semi = 0;
+    PVLOG_NORMAL << "** Preset # " << target + 1 << ". font: " << preview_font_dir_ << "\n";
+    SOUNDQ->clear_pending();
+#ifdef BC_ANNOUNCE_PRESET_NUM
+    sound_library_.SayNumber(target + 1, SAY_WHOLE);
+#endif
+    SOUNDQ->Play(BCSoundFontPreview(preview_font_dir_));
+  }
+  char preview_font_dir_[128];
 
 #ifndef MENU_SPEC_TEMPLATE
   void Setup() override{
@@ -1742,9 +1854,9 @@ public:
       }
     }
 #endif
-    // Delaying playing font.wav so that beep can be heard first.
+    // Delaying playing (preset number) and font.wav so that beep can be heard first.
     if (scroll_presets_beep_delay_timer_.isTimerExpired()) {
-        SaberBase::DoEffect(EFFECT_NEWFONT, 0);
+      AnnouncePreset(0);
     }
   }  // Loop()
 
@@ -2093,7 +2205,7 @@ void DoSavedTwist() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_secondBlade_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_mainBlade_delay_timer_.trigger(0);
+      mute_secondBlade_delay_timer_.trigger(0);
     }
   }
 
@@ -2356,6 +2468,14 @@ void DoSavedTwist() {
   RefPtr<BufferedWavPlayer> track_player_;
   char track_[128] = "";
 
+// Stashed just in case someday...
+  // void PlaySound(const char* sound) {
+  //   RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
+  //   if (player) {
+  //     if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+  //   }
+  // }
+
 #ifdef BC_BUTTON_CLICKER
   bool Event(enum BUTTON button, EVENT event) override {
     // Play clicker only when saber is OFF and a button is PRESSED
@@ -2455,6 +2575,13 @@ any # of buttons
             DoLightningBlock();
           }
         }
+        return true;
+
+// Force
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        if (spam_blast_ || on_pending_) return false;
+        if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
+        SaberBase::DoForce();
         return true;
 
 #endif  // BC_DUAL_BLADES
@@ -3133,7 +3260,13 @@ any # of buttons
       case EFFECT_TRANSITION_SOUND:
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
         return;
-
+      case EFFECT_USER2: // Monoforce
+        if (SFX_monosfx) {
+          hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
+        } else {
+          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        }
+        return;
     }
   }  // SB_Effect
 
