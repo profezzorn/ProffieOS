@@ -1220,6 +1220,7 @@ EFFECT(array);      // for Manual Blade Array switching
 #ifdef BC_BUTTON_CLICKER
 EFFECT(press);      // for button press clicks when OFF only.
 #endif
+EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -3057,7 +3058,13 @@ any # of buttons
       case EFFECT_TRANSITION_SOUND:
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
         return;
-
+      case EFFECT_USER2: // Monoforce
+        if (SFX_monosfx) {
+          hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
+        } else {
+          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        }
+        return;
     }
   }  // SB_Effect
 
