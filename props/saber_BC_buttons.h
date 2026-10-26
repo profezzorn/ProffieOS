@@ -1251,8 +1251,7 @@ struct BCSoundFontPreview : public SoundToPlayBase {
     }
     LOCK_SD(false);
     if (!found) return player->PlayInDir(dir_, "font.wav");
-    //PVLOG_NORMAL << "** Playing " << dir_ << "/" << pick << "\n";
-    PVLOG_NORMAL << "unit = 1 vol = 0.50, Playing " << dir_ << "/" << pick << "\n";
+    PVLOG_NORMAL << "** Playing " << dir_ << "/" << pick << "\n";
     return player->PlayInDir(dir_, pick);
   }
   const char* dir_;
