@@ -218,7 +218,7 @@ public:
     }
   }
 
-  void DrawBatteryBar(const Glyph& bar, float percent, int y = 0) {
+  void DrawBatteryBar(const Glyph& bar, float percent) {
     int start, end;
     if (bar.skip < bar.columns) {
       start = -bar.skip;
@@ -231,19 +231,18 @@ public:
     int pos = start;
     int bars = floorf(percent* (0.5 + max_bars) / 100);
     for (int i = 0; i < bars; i++) {
-      Draw(bar, pos, y);
+      Draw(bar, pos, 0);
       pos += bar.skip;
     }
   }
 
   void DrawText(const char* str,
                 int x, int y,
-                const Glyph* font,
-                int line_height = 16) {
+                const Glyph* font) {
     while (*str) {
       if (*str == '\n') {
         x = 0;
-        y += line_height;
+        y += 16;
       } else if (*str >= 0x20 && *str <= 0x7f) {
         const Glyph& glyph = font[*str - 0x20];
         int glyph_width = glyph.skip;
@@ -252,7 +251,7 @@ public:
         // move to the next line before drawing it.
         if (x > 0 && x + glyph_width > WIDTH) {
           x = 0;
-          y += line_height;
+          y += 16;
         }
 
         Draw(glyph, x, y);

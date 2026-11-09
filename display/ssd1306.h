@@ -388,14 +388,14 @@ public:
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
         if (WIDTH < 128) {
-          DrawScreenText("p-os", 15, Starjedi10pt7bGlyphs);
+          display_->DrawText("p-os", 0, 15, Starjedi10pt7bGlyphs);
         } else {
-          DrawScreenText("proffieos", 15, Starjedi10pt7bGlyphs);
+          display_->DrawText("proffieos", 0, 15, Starjedi10pt7bGlyphs);
         }
-        DrawScreenText(version, 31, Starjedi10pt7bGlyphs);
+        display_->DrawText(version, 0, 31, Starjedi10pt7bGlyphs);
         if (display_->HardwareHeight() > 32) {
-          DrawScreenText("installed: ", 47, Starjedi10pt7bGlyphs);
-          DrawScreenText(install_time, 63, Starjedi10pt7bGlyphs);
+          display_->DrawText("installed: ", 0, 47, Starjedi10pt7bGlyphs);
+          display_->DrawText(install_time, 0, 63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_DEFAULT;
         if (font_config.ProffieOSTextMessageDuration != -1) {
@@ -413,15 +413,15 @@ public:
           return FillFrameBuffer2(advance);
         }
         Clear();
-        DrawScreenBatteryBar(BatteryBar16, battery_monitor.battery_percent());
-        if (ShowVoltage()) {
+        display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+        if (display_->HardwareHeight() > 32) {
           char tmp[32];
           strcpy(tmp, "volts x.xx");
           float v = battery_monitor.battery();
           tmp[6] = '0' + (int)floorf(v);
           tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
           tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-          DrawScreenText(tmp, 55, Starjedi10pt7bGlyphs);
+          display_->DrawText(tmp, 0, 55, Starjedi10pt7bGlyphs);
         }
         return 200;  // redraw once every 200 ms
 
@@ -448,10 +448,10 @@ public:
         const Glyph* font = Starjedi10pt7bGlyphs;
 #endif
         if (strchr(message_, '\n')) {
-          DrawScreenText(message_, 15, font);
+          display_->DrawText(message_, 0, 15, font);
         } else {
         // centered
-          DrawScreenText(message_, display_->HardwareHeight() / 2 + 7, font);
+          display_->DrawText(message_, 0, display_->HardwareHeight() / 2 + 7, font);
         }
         return 200;  // redraw once every 200 ms
       }
@@ -627,17 +627,6 @@ public:
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
     screen_ = SCREEN_MESSAGE;
-  }
-
-  // Config file hooks for custom heights like 64x48 OLEDs.
-  virtual void DrawScreenText(const char* message, int y, const Glyph* font) {
-    display_->DrawText(message, 0, y, font);
-  }
-  virtual void DrawScreenBatteryBar(const Glyph& bar, float percent) {
-    display_->DrawBatteryBar(bar, percent);
-  }
-  virtual bool ShowVoltage() {
-    return display_->HardwareHeight() > 32;
   }
 
   // Calls SetScreenNow already.
