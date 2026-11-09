@@ -388,14 +388,14 @@ public:
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
         if (WIDTH < 128) {
-          display_->DrawText("p-os", 0, 15, Starjedi10pt7bGlyphs);
+          display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
         } else {
-          display_->DrawText("proffieos", 0, 15, Starjedi10pt7bGlyphs);
+          display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
         }
-        display_->DrawText(version, 0, 31, Starjedi10pt7bGlyphs);
+        display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
         if (display_->HardwareHeight() > 32) {
-          display_->DrawText("installed: ", 0, 47, Starjedi10pt7bGlyphs);
-          display_->DrawText(install_time, 0, 63, Starjedi10pt7bGlyphs);
+          display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+          display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_DEFAULT;
         if (font_config.ProffieOSTextMessageDuration != -1) {
@@ -421,7 +421,7 @@ public:
           tmp[6] = '0' + (int)floorf(v);
           tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
           tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-          display_->DrawText(tmp, 0, 55, Starjedi10pt7bGlyphs);
+          display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
         }
         return 200;  // redraw once every 200 ms
 
@@ -501,11 +501,16 @@ public:
     }
   }
 
-  void SB_On(EffectLocation location) override {
+  bool ShouldDelayOnImage() {
     // Delay on.bmp until boot,font, or name message has been displayed for its full duration
-    if (current_effect_ == &img_.IMG_font) return;
-    if (current_effect_ == &img_.IMG_boot) return;
-    if (screen_ == SCREEN_STARTUP || screen_ == SCREEN_MESSAGE || screen_ == SCREEN_ERROR_MESSAGE) return;
+    if (current_effect_ == &img_.IMG_font) return true;
+    if (current_effect_ == &img_.IMG_boot) return true;
+    if (screen_ == SCREEN_STARTUP || screen_ == SCREEN_MESSAGE || screen_ == SCREEN_ERROR_MESSAGE) return true;
+    return false;
+  }
+
+  void SB_On(EffectLocation location) override {
+    if (ShouldDelayOnImage()) return;
     if (!ShowFile(&img_.IMG_on, font_config.ProffieOSOnImageDuration)) {
       ShowDefault();
       last_delay_ = t_ = 0;
@@ -514,8 +519,11 @@ public:
   }
 
   void SB_On2(EffectLocation location) override {
+    if (ShouldDelayOnImage()) return;
     if (img_.IMG_out) {
       ShowFileWithSoundLength(&img_.IMG_out, font_config.ProffieOSOutImageDuration);
+    } else {
+      ShowDefault();
     }
   }
 
@@ -787,6 +795,7 @@ public:
         layout_ = LAYOUT_LANDSCAPE;
         looped_frames_ = height / HEIGHT;
       } else {
+        layout_ = LAYOUT_PORTRAIT;
         looped_frames_ = height / WIDTH;
       }
       if (current_effect_ == &img_.IMG_on) {
