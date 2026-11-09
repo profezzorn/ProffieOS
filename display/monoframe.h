@@ -244,8 +244,18 @@ public:
         x = 0;
         y += 16;
       } else if (*str >= 0x20 && *str <= 0x7f) {
-        Draw(font[*str - 0x20], x, y);
-        x += font[*str - 0x20].skip;
+        const Glyph& glyph = font[*str - 0x20];
+        int glyph_width = glyph.skip;
+
+        // Forced wrap: if this glyph won't fit on the current line,
+        // move to the next line before drawing it.
+        if (x > 0 && x + glyph_width > WIDTH) {
+          x = 0;
+          y += 16;
+        }
+
+        Draw(glyph, x, y);
+        x += glyph_width;
       }
       str++;
     }

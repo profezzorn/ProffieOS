@@ -88,6 +88,10 @@ enum Screen {
 template<int Width, class col_t>
 class Display : public MonoFrame<Width, col_t> {
 public:
+  virtual int HardwareHeight() {
+    return sizeof(col_t) * 8;
+  }
+
   virtual void Page() = 0;
   virtual void SB_Top() = 0;
   virtual Screen GetScreen() = 0;
@@ -389,7 +393,7 @@ public:
           display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
         }
         display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
-        if (HEIGHT > 32) {
+        if (display_->HardwareHeight() > 32) {
           display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
@@ -410,7 +414,7 @@ public:
         }
         Clear();
         display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
-        if (HEIGHT > 32) {
+        if (display_->HardwareHeight() > 32) {
           char tmp[32];
           strcpy(tmp, "volts x.xx");
           float v = battery_monitor.battery();
@@ -447,7 +451,7 @@ public:
           display_->DrawText(message_, 0, 15, font);
         } else {
         // centered
-          display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
+          display_->DrawText(message_, 0, display_->HardwareHeight() / 2 + 7, font);
         }
         return 200;  // redraw once every 200 ms
       }
@@ -936,6 +940,10 @@ template<int WIDTH, class col_t, class POWER_PIN = PowerPINS<> >
 class SSD1306Template : public Display<WIDTH, col_t>, I2CDevice, Looper, StateMachine {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
+  // Hook for custom heights like 64x48 OLEDs.
+  virtual int HardwareHeight() {
+    return HEIGHT;
+  }
   const char* name() override { return "SSD1306"; }
 
   enum Commands {
@@ -1048,7 +1056,7 @@ public:
       Send(0x80);                          // the suggested ratio 0x80
 
       Send(SETMULTIPLEX);                  // 0xA8
-      Send(HEIGHT - 1);
+      Send(HardwareHeight() - 1);
 
       Send(SETDISPLAYOFFSET);              // 0xD3
       Send(0x0);                                   // no offset
